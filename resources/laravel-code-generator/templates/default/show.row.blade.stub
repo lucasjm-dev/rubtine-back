@@ -1,0 +1,2 @@
+            <dt class="text-lg-end col-lg-2 col-xl-3">[% field_title %]</dt>
+            <dd class="col-lg-10 col-xl-9">{{ [% field_value %] }}</dd>

@@ -1,0 +1,1 @@
+                            <td class="align-middle">{{ [% field_value %] }}</td>
