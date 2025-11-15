@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests\SimpleUser;
+namespace App\Domains\Users\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class CreateSimpleUserRequest extends FormRequest
+class UpdateSimpleUserRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -23,10 +23,10 @@ class CreateSimpleUserRequest extends FormRequest
      */
     public function rules()
     {
-        
+
         return [
-            'user_id' => 'nullable|string|max:255',
-            'birthday' => 'nullable|string|max:32',
+            'user_id' => 'nullable|integer|min:1|max:999999999',
+            'birthday' => 'nullable|date_format:Y-m-d|before:-13 years|after:-120 years',
             'about_me' => 'nullable|string|max:255',
             // 'profile_photo' => 'nullable|string|max:255',
         ];

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Auth;
+namespace App\Domains\Auth\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -25,8 +25,8 @@ class RegisterUserRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'username' => 'nullable|string|max:255',
-            'full_name' => 'nullable|string|max:255',
+            'username' => 'nullable|string|max:32',
+            'full_name' => 'nullable|string|max:32',
 
             'email' => [
                 'required_without:user_id',
@@ -39,8 +39,26 @@ class RegisterUserRequest extends FormRequest
                 'required_without:user_id',
                 'string',
                 'min:6',
+                'max:12',
                 'confirmed',
             ],
         ];
+    }
+
+    protected function prepareForValidation()
+    {
+        if (!is_numeric($this->user_id)) {
+            $this->merge(['user_id' => null]);
+            return;
+        }
+
+        $value = (int) $this->user_id;
+
+        if ($value < 1 || $value > 999999999) {
+            $this->merge(['user_id' => null]);
+            return;
+        }
+
+        $this->merge(['user_id' => $value]);
     }
 }

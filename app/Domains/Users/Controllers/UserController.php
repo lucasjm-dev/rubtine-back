@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Http\Controllers\Api\V1;
+namespace App\Domains\Users\Controllers;
 
+use App\Domains\Users\Requests\UpdateUserRequest;
 use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\User\UpdateUserRequest;
+
 
 class UserController extends Controller
 {
@@ -17,7 +18,7 @@ class UserController extends Controller
 
     public function update(UpdateUserRequest $request)
     {
-        /** @var \App\Models\User $user */
+        /** @var User  */
         $user = auth()->user();
         $data = $request->validated();
 
@@ -30,7 +31,7 @@ class UserController extends Controller
 
     public function delete()
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = auth()->user();
 
         $user->delete();

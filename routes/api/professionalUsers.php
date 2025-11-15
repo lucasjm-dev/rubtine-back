@@ -1,7 +1,8 @@
 <?php
 
-use App\Http\Controllers\Api\V1\ProfessionalUserController;
-use App\Models\User;
+use App\Domains\Users\Controllers\ProfessionalUserController;
+use App\Domains\Users\Models\ProfessionalUser;
+use App\Domains\Users\Models\User;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('professionalUser')->group(function () {

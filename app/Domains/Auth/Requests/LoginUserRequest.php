@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Http\Requests\Auth;
+namespace App\Domains\Auth\Requests;
 
-use App\Models\User;
+use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -28,7 +28,7 @@ class LoginUserRequest extends FormRequest
     {
         return [
             'email'    => 'required|email',
-            'password' => 'required|string|min:6',
+            'password' => 'required|string|min:6|max:12',
             'login_as' => [
                 'required',
                 'string',

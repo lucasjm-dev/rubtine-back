@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\ProfessionalUser;
+namespace App\Domains\Users\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -25,8 +25,8 @@ class UpdateProfessionalUserRequest extends FormRequest
     {
 
         return [
-            'user_id' => 'nullable|string|max:255',
-            'birthday' => 'nullable|string|max:32',
+            'user_id' => 'nullable|integer|min:1|max:999999999',
+            'birthday' => 'nullable|date_format:Y-m-d|before:-13 years|after:-120 years',
             'about_me' => 'nullable|string|max:255',
             'subcategory_id' => 'nullable|integer|exists:subcategories,id'
             // 'profile_photo' => 'nullable|string|max:255',

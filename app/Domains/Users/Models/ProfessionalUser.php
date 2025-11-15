@@ -1,11 +1,12 @@
 <?php
 
-namespace App\Models;
+namespace App\Domains\Users\Models;
 
+use App\Domains\Categories\Models\Subcategory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class CompanyUser extends Model
+class ProfessionalUser extends Model
 {
     use HasFactory;
 
@@ -13,9 +14,8 @@ class CompanyUser extends Model
         'user_id',
         'birthday',
         'about_me',
-        'tax_id',
-        'business_name',
-        'profile_photo'
+        'profile_photo',
+        'subcategory_id',
     ];
 
     protected $hidden = [];
@@ -29,9 +29,14 @@ class CompanyUser extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function professionals()
+    public function subcategory()
     {
-        return $this->belongsToMany(ProfessionalUser::class, 'company_user_professional_user')
+        return $this->belongsTo(Subcategory::class);
+    }
+
+    public function companies()
+    {
+        return $this->belongsToMany(CompanyUser::class, 'company_user_professional_user')
             ->withTimestamps()
             ->withPivot('approved');
     }

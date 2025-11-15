@@ -54,7 +54,7 @@ class Handler extends ExceptionHandler
         // 🔹 Validation errors (422)
         if ($e instanceof ValidationException) {
             return ApiResponse::error(
-                'Validation error',
+                'validation_error',
                 $e->errors(),
                 422
             );
@@ -63,9 +63,9 @@ class Handler extends ExceptionHandler
         // 🔹 Model not found (404)
         if ($e instanceof ModelNotFoundException) {
             $modelClass = $e->getModel();
-            $modelName = class_basename($modelClass);
+            $modelName = strtolower(class_basename($modelClass));
             return ApiResponse::error(
-                "{$modelName} not found",
+                "{$modelName}_not_found",
                 null,
                 404
             );
@@ -75,7 +75,7 @@ class Handler extends ExceptionHandler
         // 🔹 Route not found (404)
         if ($e instanceof NotFoundHttpException) {
             return ApiResponse::error(
-                'Endpoint not found',
+                'endpoint_not_found',
                 null,
                 404
             );
@@ -84,7 +84,7 @@ class Handler extends ExceptionHandler
         // 🔹 Unauthorized (401)
         if ($e instanceof UnauthorizedHttpException) {
             return ApiResponse::error(
-                'Unauthorized',
+                'unauthorized',
                 null,
                 401
             );
@@ -93,7 +93,7 @@ class Handler extends ExceptionHandler
         // 🔹 Forbidden (403)
         if ($e instanceof AccessDeniedException) {
             return ApiResponse::error(
-                'Forbidden',
+                'forbidden',
                 null,
                 403
             );
@@ -110,7 +110,7 @@ class Handler extends ExceptionHandler
 
         // 🔹 Default (500)
         return ApiResponse::error(
-            'Internal error',
+            'internal_error',
             ['exception' => $e->getMessage(), 'string' => $e->getTraceAsString()],
             500
         );

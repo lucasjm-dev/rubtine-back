@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Domains\Users\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Notifications\Notifiable;
@@ -11,8 +11,8 @@ class User extends Authenticatable implements JWTSubject
 {
     use HasFactory, Notifiable;
 
-    const TYPE_SIMPLE = 'simple';
-    const TYPE_PROFESSIONAL = 'professional';
+    const TYPE_SIMPLE = 'simpleUser';
+    const TYPE_PROFESSIONAL = 'professionalUser';
 
     protected $fillable = [
         'username',
@@ -24,11 +24,14 @@ class User extends Authenticatable implements JWTSubject
     protected $hidden = [
         'password',
         'remember_token',
+        'simpleUser',
+        'professionalUser',
     ];
 
     protected $casts = [
         'email_verified_at' => 'datetime'
     ];
+
 
 
     public function setPasswordAttribute($value)
@@ -74,5 +77,31 @@ class User extends Authenticatable implements JWTSubject
             default:
                 return false;
         }
+    }
+
+    public function getProfilesAttribute()
+    {
+        $profiles = [];
+
+        if ($this->relationLoaded('simpleUser') && $this->simpleUser) {
+            $profiles['simple_user'] = $this->simpleUser;
+        }
+
+        if ($this->relationLoaded('professionalUser') && $this->professionalUser) {
+            $profiles['professional_user'] = $this->professionalUser;
+        }
+
+        return !empty($profiles) ? $profiles : null;
+    }
+
+    public function toArray()
+    {
+        $array = parent::toArray();
+
+        if ($profiles = $this->getProfilesAttribute()) {
+            $array['profiles'] = $profiles;
+        }
+
+        return $array;
     }
 }

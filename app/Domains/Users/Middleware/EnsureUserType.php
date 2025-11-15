@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Middleware;
+namespace App\Domains\Users\Middleware;
 
 use App\Helpers\ApiResponse;
 use Closure;
@@ -14,7 +14,7 @@ class EnsureUserType
         $loginAs = auth()->payload()->get('login_as');
 
         if ($loginAs !== $type) {
-            return ApiResponse::error('Unauthorized', null, 403);
+            return ApiResponse::error('access_denied', null, 403);
         }
 
         return $next($request);

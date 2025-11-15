@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\User;
+namespace App\Domains\Users\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -25,12 +25,12 @@ class UpdateUserRequest extends FormRequest
     {
         // don't return error if email exists with same user
         $userId = auth()->id();
-        
+
         return [
-            'username' => 'nullable|string|max:255',
-            'full_name' => 'nullable|string|max:255',
+            'username' => 'nullable|string|max:32',
+            'full_name' => 'nullable|string|max:32',
             'email'    => "required|string|email|unique:users,email,{$userId}",
-            'password' => 'required|string|min:6'
+            'password' => 'required|string|min:6|max:12'
         ];
     }
 }

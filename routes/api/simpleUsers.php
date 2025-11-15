@@ -1,7 +1,8 @@
 <?php
 
-use App\Http\Controllers\Api\V1\SimpleUserController;
-use App\Models\User;
+use App\Domains\Users\Controllers\SimpleUserController;
+use App\Domains\Users\Models\SimpleUser;
+use App\Domains\Users\Models\User;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('simpleUser')->group(function () {
