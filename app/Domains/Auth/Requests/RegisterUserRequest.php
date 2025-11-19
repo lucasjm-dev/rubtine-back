@@ -29,36 +29,19 @@ class RegisterUserRequest extends FormRequest
             'full_name' => 'nullable|string|max:32',
 
             'email' => [
-                'required_without:user_id',
+                'required',
                 'string',
                 'email',
-                Rule::unique('users', 'email')->ignore($this->user_id),
+                Rule::unique('users', 'email'),
             ],
 
             'password' => [
-                'required_without:user_id',
+                'required',
                 'string',
                 'min:6',
                 'max:12',
                 'confirmed',
             ],
         ];
-    }
-
-    protected function prepareForValidation()
-    {
-        if (!is_numeric($this->user_id)) {
-            $this->merge(['user_id' => null]);
-            return;
-        }
-
-        $value = (int) $this->user_id;
-
-        if ($value < 1 || $value > 999999999) {
-            $this->merge(['user_id' => null]);
-            return;
-        }
-
-        $this->merge(['user_id' => $value]);
     }
 }

@@ -6,8 +6,8 @@ use App\Domains\Users\Models\User;
 
 trait LoadsUserProfiles
 {
-    protected function withProfiles(User $user): User
+    protected function loadProfiles(User $user): User
     {
-        return $user->load(User::availableTypes());
+        return $user->load($user->getAvailableTypes());
     }
 }

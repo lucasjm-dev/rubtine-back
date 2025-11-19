@@ -2,18 +2,20 @@
 
 namespace App\Domains\Users\Middleware;
 
+use App\Domains\Users\Models\User;
 use App\Helpers\ApiResponse;
 use Closure;
 use Illuminate\Http\Request;
 
-class EnsureUserType
+class EnsureSimpleUser
 {
 
-    public function handle(Request $request, Closure $next, $type)
+    public function handle(Request $request, Closure $next)
     {
-        $loginAs = auth()->payload()->get('login_as');
+        $payload = auth()->payload();
+        $loginAs = $payload->get('login_as');
 
-        if ($loginAs !== $type) {
+        if ($loginAs !== User::TYPE_SIMPLE) {
             return ApiResponse::error('access_denied', null, 403);
         }
 

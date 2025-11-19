@@ -9,43 +9,41 @@ use Illuminate\Support\Facades\Auth;
 
 class ProfessionalUserService
 {
-    public function create($userData = null, array $professionalData)
-    {
-        if (!empty($professionalData['user_id'])) {
-            $user = User::findOrFail($professionalData['user_id']);
-        } else {
-            $user = User::create($userData);
-        }
-
-        $professionalUser = ProfessionalUser::firstOrCreate(
-            ['user_id' => $user->id],
-            $professionalData
-        );
-
-        $token = Auth::claims(['login_as' => User::TYPE_PROFESSIONAL])->login($user);
-
-        return [
-            'token' => $token
-        ];
-    }
-
-    public function update($data = null, $professionalData)
+    public function create(array $professionalData)
     {
         /** @var User */
         $user = auth()->user();
 
-        if (!empty($data)) {
-            $user->update($data);
+        if ($user->professionalUser()->exists()) {
+            return ApiResponse::error(
+                'professional_user_already_exists',
+                null,
+                422
+            );
         }
+
+        $professionalUser = $user->professionalUser()->create($professionalData);
+
+        $token = Auth::claims([
+            'login_as' => User::TYPE_PROFESSIONAL
+        ])->login($user);
+
+        return ApiResponse::success([
+            'token' => $token,
+            'professional_user' => $professionalUser->fresh(),
+        ]);
+    }
+
+    public function update($professionalData)
+    {
+        /** @var User */
+        $user = auth()->user();
 
         if (! $professionalUser = $user->professionalUser) {
             return ApiResponse::error("professional_user_not_found", null, 403);
         }
         $professionalUser->update($professionalData);
 
-        return ApiResponse::success([
-            'user' => $user->fresh(),
-            'professional_user' => $professionalUser->fresh(),
-        ]);
+        return ApiResponse::success($professionalUser->fresh());
     }
 }

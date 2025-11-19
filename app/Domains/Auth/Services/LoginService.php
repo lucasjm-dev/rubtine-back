@@ -2,39 +2,69 @@
 
 namespace App\Domains\Auth\Services;
 
+use App\Domains\Users\Models\User;
 use App\Helpers\ApiResponse;
+use App\Traits\LoadsUserProfiles;
 use Illuminate\Support\Facades\Auth;
 
 class LoginService
 {
+    use LoadsUserProfiles;
+
+    public function register($userData = null)
+    {
+        $user = User::create($userData);
+
+        return ApiResponse::success([
+            'token' => Auth::login($user)
+        ]);
+    }
+
     public function attemptLogin(array $data)
     {
-        $credentials = [
-            'email' => $data['email'],
-            'password' => $data['password'],
-        ];
-
-        if (! Auth::attempt($credentials)) {
+        if (! Auth::attempt($data)) {
             return ApiResponse::error('auth_invalid_credentials', null, 401);
         }
 
-        /** @var User */
-        $user = Auth::user();
+        /** @var User $user */
+        $user = $this->loadProfiles(Auth::user());
+        $loginAs = $user->autoDetectLoginAs();
+        $claims = [];
 
-        if (! $user->canLoginAs($data['login_as'])) {
-            return ApiResponse::error(
-                'auth_invalid_login_as',
-                null,
-                403,
-                ['reason' => 'The provided login_as type is not allowed.']
-            );
+        if ($loginAs !== null) {
+            $claims['login_as'] = $loginAs;
         }
 
-        $customClaims = ['login_as' => $data['login_as']];
-        $token = Auth::claims($customClaims)->login($user);
+        $token = Auth::claims($claims)->login($user);
 
         return ApiResponse::success([
             'token' => $token,
+            'login_as' => $loginAs,
+            'user' => $user
+        ]);
+    }
+
+    public function switchLoginAs(string $loginAs)
+    {
+        /** @var User $user */
+        $user = auth()->user();
+
+        if (! in_array($loginAs, $user->getAvailableTypes(), true)) {
+            return ApiResponse::error('auth_invalid_login_as', [
+                'reason' => "User does not have the profile '$loginAs'"
+            ], 403);
+        }
+
+        $user = $this->loadProfiles($user);
+
+
+        $token = Auth::claims([
+            'login_as' => $loginAs
+        ])->login($user);
+
+        return ApiResponse::success([
+            'token' => $token,
+            'login_as' => $loginAs,
         ]);
     }
 }

@@ -9,12 +9,6 @@ use App\Http\Controllers\Controller;
 
 class UserController extends Controller
 {
-    // all users
-    // public function index()
-    // {
-    //     $users = User::paginate(10);
-    //     return ApiResponse::success($users);
-    // }
 
     public function update(UpdateUserRequest $request)
     {

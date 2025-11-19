@@ -33,7 +33,6 @@ class User extends Authenticatable implements JWTSubject
     ];
 
 
-
     public function setPasswordAttribute($value)
     {
         $this->attributes['password'] = bcrypt($value);
@@ -59,24 +58,26 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasOne(ProfessionalUser::class);
     }
 
-    public static function availableTypes(): array
+    public function getAvailableTypes(): array
     {
-        return [
-            self::TYPE_SIMPLE,
-            self::TYPE_PROFESSIONAL,
-        ];
+        $types = [];
+
+        if ($this->simpleUser()->exists()) {
+            $types[] = self::TYPE_SIMPLE;
+        }
+
+        if ($this->professionalUser()->exists()) {
+            $types[] = self::TYPE_PROFESSIONAL;
+        }
+
+        return $types;
     }
 
-    public function canLoginAs(string $type): bool
+    public function autoDetectLoginAs(): ?string
     {
-        switch ($type) {
-            case self::TYPE_SIMPLE:
-                return (bool) $this->simpleUser;
-            case self::TYPE_PROFESSIONAL:
-                return (bool) $this->professionalUser;
-            default:
-                return false;
-        }
+        $types = $this->getAvailableTypes();
+
+        return count($types) === 1 ? $types[0] : null;
     }
 
     public function getProfilesAttribute()
@@ -93,6 +94,7 @@ class User extends Authenticatable implements JWTSubject
 
         return !empty($profiles) ? $profiles : null;
     }
+
 
     public function toArray()
     {

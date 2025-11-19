@@ -2,39 +2,37 @@
 
 namespace App\Domains\Users\Controllers;
 
-use App\Domains\Auth\Requests\RegisterUserRequest;
+use App\Domains\Users\Models\User;
 use App\Domains\Users\Requests\CreateProfessionalUserRequest;
 use App\Domains\Users\Requests\UpdateProfessionalUserRequest;
-use App\Domains\Users\Requests\UpdateUserRequest;
 use App\Domains\Users\Services\ProfessionalUserService;
 use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
 
 class ProfessionalUserController extends Controller
 {
-    public function create(RegisterUserRequest $userRequest, CreateProfessionalUserRequest $professionalRequest, ProfessionalUserService $service)
+    public function create(CreateProfessionalUserRequest $professionalRequest, ProfessionalUserService $service)
     {
-
-        $userData = $userRequest->validated();
         $professionalData = $professionalRequest->validated();
-
-        return $service->create($userData, $professionalData);
+        return $service->create($professionalData);
     }
 
 
 
-    public function update(UpdateUserRequest $userRequest, UpdateProfessionalUserRequest $professionalUserRequest, ProfessionalUserService $service)
+    public function update(UpdateProfessionalUserRequest $professionalUserRequest, ProfessionalUserService $service)
     {
-        $data = $userRequest->validated();
         $professionalData = $professionalUserRequest->validated();
-
-        return $service->update($data, $professionalData);
+        return $service->update($professionalData);
     }
 
     public function delete()
     {
         $professionalUser = auth()->user()->professionalUser;
         $professionalUser->delete();
+        $loginAs = auth()->payload()->get('login_as', null);
+        if ($loginAs === User::TYPE_PROFESSIONAL) {
+            return ApiResponse::success(auth()->logout());
+        }
         return ApiResponse::success();
     }
 }
