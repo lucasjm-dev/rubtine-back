@@ -2,9 +2,7 @@
 
 namespace App\Domains\Auth\Requests;
 
-use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 
 class LoginUserRequest extends FormRequest

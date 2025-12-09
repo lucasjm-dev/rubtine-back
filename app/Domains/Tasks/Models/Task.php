@@ -1,0 +1,50 @@
+<?php
+
+namespace App\Domains\Tasks\Models;
+
+use App\Domains\Categories\Models\Subcategory;
+use App\Domains\Tasks\Enums\TaskStatus;
+use App\Domains\Tasks\Models\Pivots\TaskProfessional;
+use App\Domains\Users\Models\ProfessionalUser;
+use App\Domains\Users\Models\User;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Task extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'user_id',
+        'title',
+        'description',
+        'status',
+        'public',
+        'subcategory_id',
+    ];
+
+    protected $hidden = [];
+
+    protected $casts = [
+        'status' => TaskStatus::class,
+    ];
+
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function subcategory()
+    {
+        return $this->belongsTo(Subcategory::class);
+    }
+
+    public function professionals()
+    {
+        return $this->belongsToMany(ProfessionalUser::class, 'task_professional_user')
+            ->using(TaskProfessional::class)
+            ->withPivot(['status'])
+            ->withTimestamps();
+    }
+}

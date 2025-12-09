@@ -4,6 +4,7 @@ namespace App\Domains\Users\Services;
 
 use App\Domains\Users\Models\ProfessionalUser;
 use App\Domains\Users\Models\User;
+use App\Domains\Users\Resources\ProfessionalUserResource;
 use App\Helpers\ApiResponse;
 use Illuminate\Support\Facades\Auth;
 
@@ -30,7 +31,8 @@ class ProfessionalUserService
 
         return ApiResponse::success([
             'token' => $token,
-            'professional_user' => $professionalUser->fresh(),
+            'login_as' => User::TYPE_PROFESSIONAL,
+            'professional_user' => $professionalUser->fresh()
         ]);
     }
 
@@ -44,6 +46,10 @@ class ProfessionalUserService
         }
         $professionalUser->update($professionalData);
 
-        return ApiResponse::success($professionalUser->fresh());
+        return ApiResponse::success(
+            new ProfessionalUserResource(
+                $professionalUser->fresh()
+            )
+        );
     }
 }

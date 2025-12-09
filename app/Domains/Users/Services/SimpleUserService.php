@@ -30,7 +30,8 @@ class SimpleUserService
 
         return ApiResponse::success([
             'token' => $token,
-            'simple_user' => $simpleUser->fresh(),
+            'login_as' => User::TYPE_SIMPLE,
+            'simple_user' => $simpleUser->fresh()
         ]);
     }
 

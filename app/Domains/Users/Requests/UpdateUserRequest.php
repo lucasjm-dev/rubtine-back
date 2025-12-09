@@ -29,8 +29,8 @@ class UpdateUserRequest extends FormRequest
         return [
             'username' => 'nullable|string|max:32',
             'full_name' => 'nullable|string|max:32',
-            'email'    => "required|string|email|unique:users,email,{$userId}",
-            'password' => 'required|string|min:6|max:12'
+            'email'    => "nullable|string|email|unique:users,email,{$userId}",
+            'password' => 'nullable|string|min:6|max:12|confirmed'
         ];
     }
 }

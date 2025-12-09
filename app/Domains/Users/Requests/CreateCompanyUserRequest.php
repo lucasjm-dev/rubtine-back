@@ -4,7 +4,7 @@ namespace App\Domains\Users\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateProfessionalUserRequest extends FormRequest
+class CreateCompanyUserRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -27,7 +27,8 @@ class UpdateProfessionalUserRequest extends FormRequest
         return [
             'birthday' => 'nullable|date_format:Y-m-d|before:-13 years|after:-120 years',
             'about_me' => 'nullable|string|max:255',
-            'subcategory_id' => 'sometimes|integer|exists:subcategories,id'
+            'tax_id' => 'required|integer|digits:11',
+            'business_name' => 'required|string|max:32',
             // 'profile_photo' => 'nullable|string|max:255',
         ];
     }

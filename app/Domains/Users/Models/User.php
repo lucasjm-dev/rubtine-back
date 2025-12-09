@@ -13,6 +13,7 @@ class User extends Authenticatable implements JWTSubject
 
     const TYPE_SIMPLE = 'simpleUser';
     const TYPE_PROFESSIONAL = 'professionalUser';
+    const TYPE_COMPANY = 'companyUser';
 
     protected $fillable = [
         'username',
@@ -26,6 +27,7 @@ class User extends Authenticatable implements JWTSubject
         'remember_token',
         'simpleUser',
         'professionalUser',
+        'companyUser'
     ];
 
     protected $casts = [
@@ -58,6 +60,11 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasOne(ProfessionalUser::class);
     }
 
+    public function companyUser()
+    {
+        return $this->hasOne(CompanyUser::class);
+    }
+
     public function getAvailableTypes(): array
     {
         $types = [];
@@ -68,6 +75,10 @@ class User extends Authenticatable implements JWTSubject
 
         if ($this->professionalUser()->exists()) {
             $types[] = self::TYPE_PROFESSIONAL;
+        }
+
+        if ($this->companyUser()->exists()) {
+            $types[] = self::TYPE_COMPANY;
         }
 
         return $types;
@@ -90,6 +101,10 @@ class User extends Authenticatable implements JWTSubject
 
         if ($this->relationLoaded('professionalUser') && $this->professionalUser) {
             $profiles['professional_user'] = $this->professionalUser;
+        }
+
+        if ($this->relationLoaded('companyUser') && $this->companyUser) {
+            $profiles['company_user'] = $this->companyUser;
         }
 
         return !empty($profiles) ? $profiles : null;

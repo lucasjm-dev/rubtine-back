@@ -2,6 +2,7 @@
 
 namespace App\Http;
 
+use App\Domains\Users\Middleware\EnsureCompanyUser;
 use App\Domains\Users\Middleware\EnsureProfessionalUser;
 use App\Domains\Users\Middleware\EnsureSimpleUser;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
@@ -66,5 +67,6 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'simpleUser' => EnsureSimpleUser::class,
         'professionalUser' => EnsureProfessionalUser::class,
+        'companyUser' => EnsureCompanyUser::class,
     ];
 }

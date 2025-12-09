@@ -33,6 +33,7 @@ class SwitchLoginUserRequest extends FormRequest
                 Rule::in([
                     User::TYPE_SIMPLE,
                     User::TYPE_PROFESSIONAL,
+                    User::TYPE_COMPANY,
                 ]),
             ],
         ];
