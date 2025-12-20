@@ -2,11 +2,28 @@
 
 namespace App\Domains\Tasks\Enums;
 
-enum TaskProfessionalUserStatus: string
+final class TaskProfessionalUserStatus
 {
-    case PENDING = 'PENDING';
-    case ACCEPTED = 'ACCEPTED';
-    case REJECTED = 'REJECTED';
-    case CANCELED = 'CANCELED';
-    case REMOVED = 'REMOVED';
+
+    public const PENDING = 'PENDING';
+    public const ACCEPTED = 'ACCEPTED';
+    public const REJECTED = 'REJECTED';
+    public const CANCELED = 'CANCELED';
+    public const REMOVED = 'REMOVED';
+
+    public static function values(): array
+    {
+        return [
+            self::PENDING,
+            self::ACCEPTED,
+            self::REJECTED,
+            self::CANCELED,
+            self::REMOVED,
+        ];
+    }
+
+    public static function isValid(string $value): bool
+    {
+        return in_array($value, self::values(), true);
+    }
 }

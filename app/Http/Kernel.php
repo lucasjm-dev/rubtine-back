@@ -2,9 +2,9 @@
 
 namespace App\Http;
 
-use App\Domains\Users\Middleware\EnsureCompanyUser;
-use App\Domains\Users\Middleware\EnsureProfessionalUser;
-use App\Domains\Users\Middleware\EnsureSimpleUser;
+use App\Domains\Users\Middlewares\EnsureCompanyUser;
+use App\Domains\Users\Middlewares\EnsureProfessionalUser;
+use App\Domains\Users\Middlewares\EnsureSimpleUser;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 
 class Kernel extends HttpKernel

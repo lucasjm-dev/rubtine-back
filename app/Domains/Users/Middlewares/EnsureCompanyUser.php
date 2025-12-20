@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Domains\Users\Middleware;
+namespace App\Domains\Users\Middlewares;
 
 use App\Domains\Users\Models\User;
 use App\Helpers\ApiResponse;
 use Closure;
 use Illuminate\Http\Request;
 
-class EnsureProfessionalUser
+class EnsureCompanyUser
 {
 
     public function handle(Request $request, Closure $next)
@@ -15,7 +15,7 @@ class EnsureProfessionalUser
         $payload = auth()->payload();
         $loginAs = $payload->get('login_as');
 
-        if ($loginAs !== User::TYPE_PROFESSIONAL) {
+        if ($loginAs !== User::TYPE_COMPANY) {
             return ApiResponse::error('access_denied', null, 403);
         }
 

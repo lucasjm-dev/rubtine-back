@@ -3,7 +3,6 @@
 namespace App\Domains\Tasks\Models;
 
 use App\Domains\Categories\Models\Subcategory;
-use App\Domains\Tasks\Enums\TaskStatus;
 use App\Domains\Tasks\Models\Pivots\TaskProfessional;
 use App\Domains\Users\Models\ProfessionalUser;
 use App\Domains\Users\Models\User;
@@ -25,9 +24,8 @@ class Task extends Model
 
     protected $hidden = [];
 
-    protected $casts = [
-        'status' => TaskStatus::class,
-    ];
+    protected $casts = [];
+
 
 
     public function user()

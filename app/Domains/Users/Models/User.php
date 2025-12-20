@@ -2,6 +2,7 @@
 
 namespace App\Domains\Users\Models;
 
+use App\Domains\Tasks\Models\Task;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Notifications\Notifiable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
@@ -120,5 +121,15 @@ class User extends Authenticatable implements JWTSubject
         }
 
         return $array;
+    }
+
+    public function tasks()
+    {
+        return $this->hasMany(Task::class);
+    }
+
+    public function ownedTaskOrFail(int $taskId): Task
+    {
+        return $this->tasks()->findOrFail($taskId);
     }
 }
