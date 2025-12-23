@@ -2,8 +2,10 @@
 
 namespace App\Domains\Users\Controllers;
 
+use App\Domains\Tasks\Models\Task;
 use App\Domains\Users\Models\User;
 use App\Domains\Users\Requests\CreateProfessionalUserRequest;
+use App\Domains\Users\Requests\RequestAccessRequest;
 use App\Domains\Users\Requests\UpdateProfessionalUserRequest;
 use App\Domains\Users\Services\ProfessionalUserService;
 use App\Helpers\ApiResponse;
@@ -16,8 +18,6 @@ class ProfessionalUserController extends Controller
         $professionalData = $professionalRequest->validated();
         return $service->create($professionalData);
     }
-
-
 
     public function update(UpdateProfessionalUserRequest $professionalUserRequest, ProfessionalUserService $service)
     {
@@ -34,5 +34,15 @@ class ProfessionalUserController extends Controller
             return ApiResponse::success(auth()->logout());
         }
         return ApiResponse::success();
+    }
+
+    public function createRequest(Task $task, RequestAccessRequest $request, ProfessionalUserService $service)
+    {
+        return $service->createRequest($task);
+    }
+
+    public function cancelRequest(Task $task, ProfessionalUserService $service)
+    {
+        return $service->cancelRequest($task);
     }
 }

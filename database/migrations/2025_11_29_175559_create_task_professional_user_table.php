@@ -26,6 +26,8 @@ class CreateTaskProfessionalUserTable extends Migration
             $table->string('status', 32)->default('PENDING');
 
             $table->timestamps();
+            // Avoid duplicate
+            $table->unique(['task_id', 'professional_user_id']);
         });
     }
 

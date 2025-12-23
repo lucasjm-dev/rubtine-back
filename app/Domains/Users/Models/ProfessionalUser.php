@@ -3,6 +3,8 @@
 namespace App\Domains\Users\Models;
 
 use App\Domains\Categories\Models\Subcategory;
+use App\Domains\Tasks\Models\Pivots\TaskProfessional;
+use App\Domains\Tasks\Models\Task;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -39,5 +41,16 @@ class ProfessionalUser extends Model
         return $this->belongsToMany(CompanyUser::class, 'company_user_professional_user')
             ->withTimestamps()
             ->withPivot('approved');
+    }
+
+    public function tasks()
+    {
+        return $this->belongsToMany(
+            Task::class,
+            'task_professional_user'
+        )
+            ->using(TaskProfessional::class)
+            ->withPivot(['status'])
+            ->withTimestamps();
     }
 }
