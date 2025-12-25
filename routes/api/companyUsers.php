@@ -3,7 +3,7 @@
 use App\Domains\Users\Controllers\CompanyUserController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('companyUser')->group(function () {
+Route::prefix('company-user')->group(function () {
 
     Route::middleware(['auth:api'])->group(function () {
         Route::post('/create', [CompanyUserController::class, 'create']);

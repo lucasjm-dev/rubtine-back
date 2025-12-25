@@ -3,7 +3,7 @@
 namespace App\Domains\Tasks\Models;
 
 use App\Domains\Categories\Models\Subcategory;
-use App\Domains\Tasks\Models\Pivots\TaskProfessional;
+use App\Domains\Tasks\Models\Pivots\TaskRequest;
 use App\Domains\Users\Models\ProfessionalUser;
 use App\Domains\Users\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -41,8 +41,13 @@ class Task extends Model
     public function professionals()
     {
         return $this->belongsToMany(ProfessionalUser::class, 'task_professional_user')
-            ->using(TaskProfessional::class)
+            ->using(TaskRequest::class)
             ->withPivot(['status'])
             ->withTimestamps();
+    }
+
+    public function isOwnedBy(User $user): bool
+    {
+        return $this->user_id === $user->id;
     }
 }

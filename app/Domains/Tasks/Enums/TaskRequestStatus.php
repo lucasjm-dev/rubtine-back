@@ -2,7 +2,7 @@
 
 namespace App\Domains\Tasks\Enums;
 
-final class TaskProfessionalUserStatus
+final class TaskRequestStatus
 {
 
     public const PENDING = 'PENDING';

@@ -3,7 +3,7 @@
 namespace App\Domains\Users\Models;
 
 use App\Domains\Categories\Models\Subcategory;
-use App\Domains\Tasks\Models\Pivots\TaskProfessional;
+use App\Domains\Tasks\Models\Pivots\TaskRequest;
 use App\Domains\Tasks\Models\Task;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -49,7 +49,7 @@ class ProfessionalUser extends Model
             Task::class,
             'task_professional_user'
         )
-            ->using(TaskProfessional::class)
+            ->using(TaskRequest::class)
             ->withPivot(['status'])
             ->withTimestamps();
     }

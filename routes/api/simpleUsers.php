@@ -3,7 +3,7 @@
 use App\Domains\Users\Controllers\SimpleUserController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('simpleUser')->group(function () {
+Route::prefix('simple-user')->group(function () {
 
     Route::middleware(['auth:api'])->group(function () {
         Route::post('/create', [SimpleUserController::class, 'create']);

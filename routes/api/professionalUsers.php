@@ -3,7 +3,7 @@
 use App\Domains\Users\Controllers\ProfessionalUserController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('professionalUser')->group(function () {
+Route::prefix('professional-user')->group(function () {
 
     Route::middleware(['auth:api'])->group(function () {
         Route::post('/create', [ProfessionalUserController::class, 'create']);
