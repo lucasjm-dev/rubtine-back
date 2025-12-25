@@ -4,11 +4,17 @@ namespace App\Domains\Tasks\Controllers;
 
 use App\Domains\Tasks\Models\Pivots\TaskRequest;
 use App\Domains\Tasks\Models\Task;
+use App\Domains\Tasks\Requests\TaskRequestIndexRequest;
 use App\Domains\Tasks\Services\TaskRequestService;
 use App\Http\Controllers\Controller;
 
 class TaskRequestController extends Controller
 {
+
+    public function index(TaskRequestIndexRequest $request, TaskRequestService $service)
+    {
+        return $service->paginate($request->validated());
+    }
 
     public function create(Task $task, TaskRequestService $service)
     {

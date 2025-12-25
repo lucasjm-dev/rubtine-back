@@ -8,9 +8,45 @@ use App\Domains\Tasks\Models\Task;
 use App\Domains\Tasks\Rules\TaskRequestTransitions;
 use App\Domains\Users\Models\ProfessionalUser;
 use App\Helpers\ApiResponse;
+use App\Support\Query\QueryPaginator;
 
 class TaskRequestService
 {
+
+    private QueryPaginator $paginator;
+
+    public function __construct(
+        QueryPaginator $paginator
+    ) {
+        $this->paginator = $paginator;
+    }
+
+    public function paginate(array $filters)
+    {
+        $query = TaskRequest::query();
+        /** @var User  **/
+        $user = auth()->user();
+
+        if ($user->isLoggedAsProfessional()) {
+            $query->forProfessional($user->professionalUser);
+        }
+
+        if ($user->isLoggedAsSimple()) {
+            $query->forSimpleUser($user);
+        }
+
+
+        $query->withStatus($filters['status'] ?? null);
+
+        return $this->paginator->paginate(
+            $query->with('task'),
+            $filters,
+            ['id'],
+            []
+        );
+    }
+
+
 
     public function create(Task $task)
     {

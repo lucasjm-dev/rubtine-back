@@ -2,6 +2,7 @@
 
 namespace App\Domains\Tasks\Services;
 
+use App\Domains\Tasks\Enums\TaskRequestStatus;
 use App\Domains\Tasks\Models\Task;
 use App\Domains\Users\Models\User;
 use App\Helpers\ApiResponse;
@@ -26,6 +27,21 @@ class TaskService
             $query,
             $filters,
             ['id', 'created_at', 'title', 'status'],
+            ['title', 'description']
+        );
+    }
+
+    public function paginateAssigned(array $filters)
+    {
+        /** @var ProfessionalUser $professional */
+        $professional = auth()->user()->professionalUser;
+
+        $query = Task::query()->assignedToProfessional($professional);
+
+        return $this->paginator->paginate(
+            $query,
+            $filters,
+            ['id', 'created_at', 'title'],
             ['title', 'description']
         );
     }

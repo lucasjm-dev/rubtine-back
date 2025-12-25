@@ -15,4 +15,6 @@ Route::prefix('task-requests')->group(function () {
         Route::post('/{taskRequest}/accept', [TaskRequestController::class, 'accept'])->where('taskRequest', '[0-9]{1,19}');
         Route::post('/{taskRequest}/reject', [TaskRequestController::class, 'reject'])->where('taskRequest', '[0-9]{1,19}');
     });
+
+    Route::get('/', [TaskRequestController::class, 'index']);
 });

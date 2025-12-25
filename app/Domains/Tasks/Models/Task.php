@@ -3,9 +3,11 @@
 namespace App\Domains\Tasks\Models;
 
 use App\Domains\Categories\Models\Subcategory;
+use App\Domains\Tasks\Enums\TaskRequestStatus;
 use App\Domains\Tasks\Models\Pivots\TaskRequest;
 use App\Domains\Users\Models\ProfessionalUser;
 use App\Domains\Users\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -45,6 +47,26 @@ class Task extends Model
             ->withPivot(['status'])
             ->withTimestamps();
     }
+
+    public function assignedProfessionals()
+    {
+        return $this->belongsToMany(ProfessionalUser::class, 'task_professional_user')
+            ->using(TaskRequest::class)
+            ->withPivot(['status'])
+            ->wherePivot('status', TaskRequestStatus::ACCEPTED);
+    }
+
+
+    public function scopeAssignedToProfessional(
+        Builder $query,
+        ProfessionalUser $professional
+    ): Builder {
+        return $query->whereHas('assignedProfessionals', function ($q) use ($professional) {
+            $q->where('professional_users.id', $professional->id);
+        });
+    }
+
+
 
     public function isOwnedBy(User $user): bool
     {

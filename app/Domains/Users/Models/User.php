@@ -111,6 +111,21 @@ class User extends Authenticatable implements JWTSubject
         return !empty($profiles) ? $profiles : null;
     }
 
+    public function loggedAs(): ?string
+    {
+        return auth()->payload()->get('login_as');
+    }
+
+    public function isLoggedAsProfessional(): bool
+    {
+        return $this->loggedAs() === self::TYPE_PROFESSIONAL;
+    }
+
+    public function isLoggedAsSimple(): bool
+    {
+        return $this->loggedAs() === self::TYPE_SIMPLE;
+    }
+
 
     public function toArray()
     {
