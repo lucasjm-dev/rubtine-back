@@ -13,6 +13,7 @@ Route::prefix('tasks')->group(function () {
     });
 
     Route::middleware(['auth:api', 'professionalUser'])->group(function () {
-        Route::get('/assigned', [ProfessionalTaskController::class, 'index']);
+        Route::get('/', [ProfessionalTaskController::class, 'index']);
+        Route::get('/assigned', [ProfessionalTaskController::class, 'assigned']);
     });
 });

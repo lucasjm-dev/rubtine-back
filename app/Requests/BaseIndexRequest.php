@@ -13,7 +13,7 @@ abstract class BaseIndexRequest extends FormRequest
             'per_page'  => 'nullable|integer|min:1|max:100',
             'sort_by'   => 'nullable|string|max:32',
             'sort_dir'  => 'nullable|in:asc,desc',
-            'search'    => 'nullable|string|max:255',
+            'search'    => 'nullable|string|max:128',
         ];
     }
 }

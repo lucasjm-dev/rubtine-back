@@ -46,6 +46,26 @@ class TaskService
         );
     }
 
+    public function paginateForProfessionalSubcategory(array $filters)
+    {
+        /** @var ProfessionalUser $professional */
+        $professional = auth()->user()->professionalUser;
+
+        $query = Task::query()
+            ->forProfessionalSubcategory($professional)
+            ->whereDoesntHave('assignedProfessionals', function ($q) use ($professional) {
+                $q->where('professional_users.id', $professional->id);
+            });
+
+        return $this->paginator->paginate(
+            $query,
+            $filters,
+            ['id', 'created_at', 'title'],
+            ['title', 'description']
+        );
+    }
+
+
     public function create(array $data)
     {
         /** @var User $user */

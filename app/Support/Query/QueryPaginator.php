@@ -21,7 +21,7 @@ class QueryPaginator
         }
 
         $sortBy = null;
-        $sortDir = $filters['sort_dir'] ?? 'asc';
+        $sortDir = $filters['sort_dir'] ?? 'desc';
 
         if (!empty($filters['sort_by']) && in_array($filters['sort_by'], $allowedSorts)) {
             $sortBy = $filters['sort_by'];

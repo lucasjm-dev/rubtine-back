@@ -66,6 +66,14 @@ class Task extends Model
         });
     }
 
+    public function scopeForProfessionalSubcategory(
+        Builder $query,
+        ProfessionalUser $professional
+    ): Builder {
+        return $query->where('subcategory_id', $professional->subcategory_id);
+    }
+
+
 
 
     public function isOwnedBy(User $user): bool

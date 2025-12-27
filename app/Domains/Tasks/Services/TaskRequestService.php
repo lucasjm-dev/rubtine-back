@@ -35,13 +35,18 @@ class TaskRequestService
             $query->forSimpleUser($user);
         }
 
-
         $query->withStatus($filters['status'] ?? null);
+
+        if (!empty($filters['search'])) {
+            $query->whereHas('task', function ($q) use ($filters) {
+                $q->where('title', 'ILIKE', '%' . $filters['search'] . '%');
+            });
+        }
 
         return $this->paginator->paginate(
             $query->with('task'),
             $filters,
-            ['id'],
+            ['id', 'status'],
             []
         );
     }
