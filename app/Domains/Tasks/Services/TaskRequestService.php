@@ -104,7 +104,7 @@ class TaskRequestService
         $task = $taskRequest->task;
 
         if (! $task || ! $task->isOwnedBy($user)) {
-            return ApiResponse::error('task_not_assigned_to_user', null, 403);
+            return ApiResponse::error('task_request_not_found', null, 422);
         }
 
         if (! TaskRequestTransitions::canAccept($taskRequest)) {
@@ -124,7 +124,7 @@ class TaskRequestService
         $task = $taskRequest->task;
 
         if (! $task || ! $task->isOwnedBy($user)) {
-            return ApiResponse::error('task_not_assigned_to_user', null, 403);
+            return ApiResponse::error('task_request_not_found', null, 422);
         }
 
         if (! TaskRequestTransitions::canReject($taskRequest)) {

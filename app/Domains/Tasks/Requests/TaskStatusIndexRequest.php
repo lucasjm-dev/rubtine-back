@@ -2,11 +2,11 @@
 
 namespace App\Domains\Tasks\Requests;
 
-use App\Domains\Tasks\Enums\TaskRequestStatus;
+use App\Domains\Tasks\Enums\TaskStatus;
 use App\Requests\BaseIndexRequest;
 use Illuminate\Validation\Rule;
 
-class TaskRequestIndexRequest extends BaseIndexRequest
+class TaskStatusIndexRequest extends BaseIndexRequest
 {
     public function rules(): array
     {
@@ -15,8 +15,8 @@ class TaskRequestIndexRequest extends BaseIndexRequest
                 'nullable',
                 'string',
                 'max:32',
-                Rule::in(TaskRequestStatus::values()),
-            ],
+                Rule::in(TaskStatus::values()),
+            ]
         ]);
     }
 }

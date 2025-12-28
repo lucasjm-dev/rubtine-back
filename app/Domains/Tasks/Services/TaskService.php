@@ -21,13 +21,17 @@ class TaskService
 
     public function paginate(array $filters)
     {
-        $query = Task::query()->where('user_id', auth()->id());
+        $query = Task::query()->where('user_id', auth()->id())->with('subcategory');
+
+        if (!empty($filters['status'])) {
+            $query->whereStatus($filters['status']);
+        }
 
         return $this->paginator->paginate(
             $query,
             $filters,
-            ['id', 'created_at', 'title', 'status'],
-            ['title', 'description']
+            ['id', 'created_at', 'updated_at', 'title', 'status'],
+            ['title', 'description', 'status']
         );
     }
 
@@ -36,12 +40,16 @@ class TaskService
         /** @var ProfessionalUser $professional */
         $professional = auth()->user()->professionalUser;
 
-        $query = Task::query()->assignedToProfessional($professional);
+        $query = Task::query()->assignedToProfessional($professional)->with('subcategory');
+
+        if (!empty($filters['status'])) {
+            $query->whereStatus($filters['status']);
+        }
 
         return $this->paginator->paginate(
             $query,
             $filters,
-            ['id', 'created_at', 'title'],
+            ['id', 'created_at', 'updated_at', 'title', 'status'],
             ['title', 'description']
         );
     }
@@ -52,15 +60,17 @@ class TaskService
         $professional = auth()->user()->professionalUser;
 
         $query = Task::query()
-            ->forProfessionalSubcategory($professional)
-            ->whereDoesntHave('assignedProfessionals', function ($q) use ($professional) {
-                $q->where('professional_users.id', $professional->id);
-            });
+            ->availableForProfessional($professional)
+            ->with('subcategory');
+
+        if (!empty($filters['status'])) {
+            $query->whereStatus($filters['status']);
+        }
 
         return $this->paginator->paginate(
             $query,
             $filters,
-            ['id', 'created_at', 'title'],
+            ['id', 'created_at', 'updated_at', 'title', 'status'],
             ['title', 'description']
         );
     }

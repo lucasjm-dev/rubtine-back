@@ -14,16 +14,16 @@ class TaskRequestTransitions
 
     public static function canCancel(TaskRequest $taskRequest): bool
     {
-        return $taskRequest->status === TaskRequestStatus::PENDING;
+        return $taskRequest->status === TaskRequestStatus::PENDING || $taskRequest->status === TaskRequestStatus::ACCEPTED;
     }
 
     public static function canAccept(TaskRequest $taskRequest): bool
     {
-        return $taskRequest->status === TaskRequestStatus::PENDING;
+        return $taskRequest->status === TaskRequestStatus::PENDING || $taskRequest->status === TaskRequestStatus::REJECTED;
     }
 
     public static function canReject(TaskRequest $taskRequest): bool
     {
-        return $taskRequest->status === TaskRequestStatus::PENDING;
+        return $taskRequest->status === TaskRequestStatus::PENDING || $taskRequest->status === TaskRequestStatus::ACCEPTED;
     }
 }

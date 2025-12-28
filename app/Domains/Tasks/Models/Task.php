@@ -50,9 +50,7 @@ class Task extends Model
 
     public function assignedProfessionals()
     {
-        return $this->belongsToMany(ProfessionalUser::class, 'task_professional_user')
-            ->using(TaskRequest::class)
-            ->withPivot(['status'])
+        return $this->professionals()
             ->wherePivot('status', TaskRequestStatus::ACCEPTED);
     }
 
@@ -66,14 +64,16 @@ class Task extends Model
         });
     }
 
-    public function scopeForProfessionalSubcategory(
+    public function scopeAvailableForProfessional(
         Builder $query,
         ProfessionalUser $professional
     ): Builder {
-        return $query->where('subcategory_id', $professional->subcategory_id);
+        return $query
+            ->where('subcategory_id', $professional->subcategory_id)
+            ->whereDoesntHave('professionals', function ($q) use ($professional) {
+                $q->where('professional_users.id', $professional->id);
+            });
     }
-
-
 
 
     public function isOwnedBy(User $user): bool
