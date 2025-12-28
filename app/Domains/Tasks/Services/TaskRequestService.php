@@ -5,6 +5,7 @@ namespace App\Domains\Tasks\Services;
 use App\Domains\Tasks\Enums\TaskRequestStatus;
 use App\Domains\Tasks\Models\Pivots\TaskRequest;
 use App\Domains\Tasks\Models\Task;
+use App\Domains\Tasks\Rules\TaskRequestRules;
 use App\Domains\Tasks\Rules\TaskRequestTransitions;
 use App\Domains\Users\Models\ProfessionalUser;
 use App\Helpers\ApiResponse;
@@ -58,6 +59,10 @@ class TaskRequestService
         /** @var ProfessionalUser */
         $professionalUser = auth()->user()->professionalUser;
         $taskRequest = TaskRequest::findFor($task, $professionalUser);
+
+        if (! TaskRequestRules::canCreate($task, $professionalUser)) {
+            return ApiResponse::error('task_request_not_found', null, 404);
+        }
 
         if (! $taskRequest) {
             $task->professionals()->attach(

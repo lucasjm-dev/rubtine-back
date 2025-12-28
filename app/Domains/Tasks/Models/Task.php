@@ -71,7 +71,10 @@ class Task extends Model
         return $query
             ->where('subcategory_id', $professional->subcategory_id)
             ->whereDoesntHave('professionals', function ($q) use ($professional) {
-                $q->where('professional_users.id', $professional->id);
+                $q->where('professional_users.id', $professional->id)
+                    ->whereNotIn('task_professional_user.status', [
+                        TaskRequestStatus::CANCELED,
+                    ]);
             });
     }
 
