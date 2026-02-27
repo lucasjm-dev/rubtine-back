@@ -53,7 +53,7 @@ class Handler extends ExceptionHandler
         if ($e instanceof ValidationException) {
             return ApiResponse::error(
                 'validation_error',
-                $e->errors(),
+                $this->transformValidationErrors($e),
                 422
             );
         }
@@ -112,5 +112,63 @@ class Handler extends ExceptionHandler
             ['exception' => $e->getMessage(), 'string' => $e->getTraceAsString()],
             500
         );
+    }
+
+    /**
+     * Transform validation errors into custom error codes.
+     *
+     * @param ValidationException $e
+     * @return array
+     */
+    protected function transformValidationErrors(ValidationException $e): array
+    {
+        $errors = [];
+        $failedRules = $e->validator->failed();
+
+        foreach ($failedRules as $field => $rules) {
+            $errors[$field] = [];
+            foreach ($rules as $rule => $parameters) {
+                $errors[$field][] = $this->mapRuleToErrorCode($rule, $parameters);
+            }
+        }
+
+        return $errors;
+    }
+
+    /**
+     * Map a Laravel rule to a snake_case error code.
+     *
+     * @param string $rule
+     * @param array $parameters
+     * @return string
+     */
+    protected function mapRuleToErrorCode(string $rule, array $parameters): string
+    {
+        switch (strtolower($rule)) {
+            case 'required':
+                return 'required';
+            case 'confirmed':
+                return 'confirmation_does_not_match';
+            case 'email':
+                return 'invalid_email';
+            case 'min':
+                return 'too_short';
+            case 'max':
+                return 'too_long';
+            case 'unique':
+                return 'already_taken';
+            case 'string':
+                return 'must_be_string';
+            case 'integer':
+                return 'must_be_integer';
+            case 'boolean':
+                return 'must_be_boolean';
+            case 'array':
+                return 'must_be_array';
+            case 'exists':
+                return 'not_found';
+            default:
+                return strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $rule));
+        }
     }
 }

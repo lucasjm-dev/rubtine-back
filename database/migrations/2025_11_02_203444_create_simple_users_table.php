@@ -18,7 +18,7 @@ class CreateSimpleUsersTable extends Migration
 
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
 
-            $table->date('birthday')->nullable();
+            $table->date('birth_date')->nullable();
             $table->string('about_me', 256)->nullable();
             $table->string('profile_photo', 256)->nullable();
 

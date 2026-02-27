@@ -18,7 +18,7 @@ class Controller extends BaseController
         $user = auth();
 
         $data = [
-            'access_token' => $token,
+            'token' => $token,
             'token_type'   => 'bearer',
             'expires_in'   => $user->factory()->getTTL() * 60
         ];

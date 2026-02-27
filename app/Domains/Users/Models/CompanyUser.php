@@ -11,7 +11,7 @@ class CompanyUser extends Model
 
     protected $fillable = [
         'user_id',
-        'birthday',
+        'birth_date',
         'about_me',
         'tax_id',
         'business_name',
@@ -21,7 +21,7 @@ class CompanyUser extends Model
     protected $hidden = [];
 
     protected $casts = [
-        'birthday' => 'date',
+        'birth_date' => 'date',
     ];
 
     public function user()

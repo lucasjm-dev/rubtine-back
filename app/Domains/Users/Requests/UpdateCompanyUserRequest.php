@@ -25,7 +25,7 @@ class UpdateCompanyUserRequest extends FormRequest
     {
 
         return [
-            'birthday' => 'nullable|date_format:Y-m-d|before:-13 years|after:-120 years',
+            'birth_date' => 'nullable|date_format:Y-m-d|before:-13 years|after:-120 years',
             'about_me' => 'nullable|string|max:255',
             'tax_id' => 'sometimes|integer|digits:11',
             'business_name' => 'sometimes|string|max:32'
