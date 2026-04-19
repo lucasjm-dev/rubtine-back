@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Domains\Categories\Models\Category as ModelsCategory;
+use App\Domains\Categories\Models\Subcategory as ModelsSubcategory;
 use Illuminate\Database\Seeder;
-use App\Models\Category;
-use App\Models\Subcategory;
 
 class CategorySeeder extends Seeder
 {
@@ -18,10 +18,10 @@ class CategorySeeder extends Seeder
         ];
 
         foreach ($categories as $categoryName => $subcategories) {
-            $category = Category::create(['name' => $categoryName]);
+            $category = ModelsCategory::create(['name' => $categoryName]);
 
             foreach ($subcategories as $subName) {
-                Subcategory::create([
+                ModelsSubcategory::create([
                     'name' => $subName,
                     'category_id' => $category->id,
                 ]);

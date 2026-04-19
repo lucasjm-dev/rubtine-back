@@ -2,6 +2,7 @@
 
 namespace App\Domains\Users\Models;
 
+use App\Domains\Categories\Models\Category;
 use App\Domains\Categories\Models\Subcategory;
 use App\Domains\Tasks\Models\Pivots\TaskRequest;
 use App\Domains\Tasks\Models\Task;
@@ -12,15 +13,16 @@ class ProfessionalUser extends Model
 {
     use HasFactory;
 
+    protected $with = ['subcategory'];
+
     protected $fillable = [
         'user_id',
         'birth_date',
         'about_me',
-        'profile_photo',
-        'subcategory_id',
+        'profile_photo'
     ];
 
-    protected $hidden = [];
+    protected $hidden = ['subcategory_id'];
 
     protected $casts = [
         'birth_date' => 'date',

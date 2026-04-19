@@ -29,8 +29,20 @@ class UpdateUserRequest extends FormRequest
         return [
             'username' => 'nullable|string|max:32',
             'full_name' => 'nullable|string|max:32',
-            'email'    => "nullable|string|email|unique:users,email,{$userId}",
+            'email'    => "nullable|email|unique:users,email,{$userId}",
             'password' => 'nullable|string|min:6|max:12|confirmed'
         ];
+    }
+
+    /**
+     * Get the validated data from the request, excluding null values.
+     *
+     * @return array
+     */
+    public function validated()
+    {
+        return array_filter(parent::validated(), function ($value) {
+            return !is_null($value);
+        });
     }
 }

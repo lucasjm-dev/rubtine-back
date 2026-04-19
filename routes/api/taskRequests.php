@@ -1,7 +1,6 @@
 <?php
 
 use App\Domains\Tasks\Controllers\TaskRequestController;
-use App\Domains\Users\Controllers\ProfessionalUserController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('task-requests')->group(function () {

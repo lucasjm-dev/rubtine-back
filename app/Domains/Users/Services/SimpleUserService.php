@@ -31,7 +31,7 @@ class SimpleUserService
         return ApiResponse::success([
             'token' => $token,
             'login_as' => User::TYPE_SIMPLE,
-            'simple_user' => $simpleUser->fresh()
+            'user' => array_merge($simpleUser->toArray(), $user->toArray())
         ]);
     }
 

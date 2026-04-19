@@ -9,12 +9,14 @@ class Subcategory extends Model
 {
     use HasFactory;
 
+    protected $with = ['category'];
+
     protected $fillable = [
         'name',
         'category_id',
     ];
 
-    protected $hidden = [];
+    protected $hidden = ['category_id'];
 
     protected $casts = [];
 
