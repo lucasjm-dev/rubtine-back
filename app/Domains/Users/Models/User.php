@@ -2,6 +2,8 @@
 
 namespace App\Domains\Users\Models;
 
+use App\Domains\Patients\Models\Patient;
+use App\Domains\Tasks\Enums\TaskParticipantRole;
 use App\Domains\Tasks\Models\Task;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Notifications\Notifiable;
@@ -138,13 +140,26 @@ class User extends Authenticatable implements JWTSubject
         return $array;
     }
 
-    public function tasks()
+    public function ownedTasks()
     {
-        return $this->hasMany(Task::class);
+        return $this->belongsToMany(
+            Task::class,
+            'task_participants',
+            'user_id',
+            'task_id'
+        )
+            ->wherePivot('role', TaskParticipantRole::OWNER)
+            ->withPivot(['role', 'status', 'requested_by_user_id'])
+            ->withTimestamps();
     }
 
-    public function ownedTaskOrFail(int $taskId): Task
+    public function createdPatients()
     {
-        return $this->tasks()->findOrFail($taskId);
+        return $this->hasMany(Patient::class, 'created_by_user_id');
+    }
+
+    public function linkedPatients()
+    {
+        return $this->hasMany(Patient::class, 'user_id');
     }
 }

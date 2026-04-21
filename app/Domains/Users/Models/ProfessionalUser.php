@@ -2,9 +2,9 @@
 
 namespace App\Domains\Users\Models;
 
-use App\Domains\Categories\Models\Category;
 use App\Domains\Categories\Models\Subcategory;
-use App\Domains\Tasks\Models\Pivots\TaskRequest;
+use App\Domains\Tasks\Enums\TaskParticipantRole;
+use App\Domains\Tasks\Enums\TaskParticipantStatus;
 use App\Domains\Tasks\Models\Task;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -49,10 +49,19 @@ class ProfessionalUser extends Model
     {
         return $this->belongsToMany(
             Task::class,
-            'task_professional_user'
+            'task_participants',
+            'user_id',
+            'task_id',
+            'user_id',
+            'id'
         )
-            ->using(TaskRequest::class)
-            ->withPivot(['status'])
+            ->wherePivot('role', TaskParticipantRole::PROFESSIONAL)
+            ->withPivot(['role', 'status', 'requested_by_user_id'])
             ->withTimestamps();
+    }
+
+    public function assignedTasks()
+    {
+        return $this->tasks()->wherePivot('status', TaskParticipantStatus::ACCEPTED);
     }
 }

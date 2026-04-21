@@ -3,8 +3,9 @@
 namespace App\Domains\Tasks\Models;
 
 use App\Domains\Categories\Models\Subcategory;
-use App\Domains\Tasks\Enums\TaskRequestStatus;
-use App\Domains\Tasks\Models\Pivots\TaskRequest;
+use App\Domains\Patients\Models\Patient;
+use App\Domains\Tasks\Enums\TaskParticipantRole;
+use App\Domains\Tasks\Enums\TaskParticipantStatus;
 use App\Domains\Users\Models\ProfessionalUser;
 use App\Domains\Users\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -16,42 +17,65 @@ class Task extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id',
         'title',
         'description',
         'status',
         'public',
         'subcategory_id',
+        'patient_id',
     ];
 
     protected $hidden = [];
 
     protected $casts = [];
 
-
-
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
-
     public function subcategory()
     {
         return $this->belongsTo(Subcategory::class);
     }
 
+    public function patient()
+    {
+        return $this->belongsTo(Patient::class);
+    }
+
+    public function participants()
+    {
+        return $this->hasMany(TaskParticipant::class);
+    }
+
+    public function owners()
+    {
+        return $this->belongsToMany(
+            User::class,
+            'task_participants',
+            'task_id',
+            'user_id'
+        )
+            ->wherePivot('role', TaskParticipantRole::OWNER)
+            ->withPivot(['role', 'status', 'requested_by_user_id'])
+            ->withTimestamps();
+    }
+
     public function professionals()
     {
-        return $this->belongsToMany(ProfessionalUser::class, 'task_professional_user')
-            ->using(TaskRequest::class)
-            ->withPivot(['status'])
+        return $this->belongsToMany(
+            ProfessionalUser::class,
+            'task_participants',
+            'task_id',
+            'user_id',
+            'id',
+            'user_id'
+        )
+            ->wherePivot('role', TaskParticipantRole::PROFESSIONAL)
+            ->withPivot(['role', 'status', 'requested_by_user_id'])
             ->withTimestamps();
     }
 
     public function assignedProfessionals()
     {
         return $this->professionals()
-            ->wherePivot('status', TaskRequestStatus::ACCEPTED);
+            ->wherePivot('status', TaskParticipantStatus::ACCEPTED);
     }
 
 
@@ -72,15 +96,27 @@ class Task extends Model
             ->where('subcategory_id', $professional->subcategory_id)
             ->whereDoesntHave('professionals', function ($q) use ($professional) {
                 $q->where('professional_users.id', $professional->id)
-                    ->whereNotIn('task_professional_user.status', [
-                        TaskRequestStatus::CANCELED,
+                    ->whereNotIn('task_participants.status', [
+                        TaskParticipantStatus::CANCELED,
                     ]);
             });
+    }
+
+    public function scopeOwnedByUser(
+        Builder $query,
+        User $user
+    ): Builder {
+        return $query->whereHas('participants', function ($q) use ($user) {
+            $q->owners()->where('user_id', $user->id);
+        });
     }
 
 
     public function isOwnedBy(User $user): bool
     {
-        return $this->user_id === $user->id;
+        return $this->participants()
+            ->owners()
+            ->where('user_id', $user->id)
+            ->exists();
     }
 }

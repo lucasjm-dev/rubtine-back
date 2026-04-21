@@ -27,6 +27,7 @@ class UpdateTaskRequest extends FormRequest
     {
         return [
             'subcategory_id' => 'sometimes|integer|exists:subcategories,id',
+            'patient_id' => 'sometimes|nullable|integer|exists:patients,id',
             'title' => 'sometimes|string|max:64',
             'description' => 'sometimes|nullable|string|max:255',
             'public' => 'sometimes|boolean',
