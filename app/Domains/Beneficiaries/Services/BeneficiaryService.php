@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Domains\Patients\Services;
+namespace App\Domains\Beneficiaries\Services;
 
-use App\Domains\Patients\Models\Patient;
+use App\Domains\Beneficiaries\Models\Beneficiary;
 use App\Domains\Users\Models\User;
 use App\Helpers\ApiResponse;
 use App\Support\Query\QueryPaginator;
 
-class PatientService
+class BeneficiaryService
 {
     private QueryPaginator $paginator;
 
@@ -22,7 +22,7 @@ class PatientService
         /** @var User $user */
         $user = auth()->user();
 
-        $query = Patient::query()->accessibleToUser($user);
+        $query = Beneficiary::query()->accessibleToUser($user);
 
         return $this->paginator->paginate(
             $query,
@@ -37,56 +37,56 @@ class PatientService
         /** @var User $user */
         $user = auth()->user();
 
-        if (! $this->canManagePatients($user)) {
-            return ApiResponse::error('patient_forbidden', null, 403);
+        if (! $this->canManageBeneficiaries($user)) {
+            return ApiResponse::error('beneficiary_forbidden', null, 403);
         }
 
         if (! $this->linkedUserIsValid($data['user_id'] ?? null)) {
-            return ApiResponse::error('patient_user_invalid', null, 422);
+            return ApiResponse::error('beneficiary_user_invalid', null, 422);
         }
 
-        $patient = Patient::query()
+        $beneficiary = Beneficiary::query()
             ->where('created_by_user_id', $user->id)
             ->where('name', $data['name'])
             ->where('last_name', $data['last_name'])
             ->where('phone', $data['phone'])
             ->first();
 
-        if ($patient) {
-            $patient->fill([
-                'email' => $data['email'] ?? $patient->email,
-                'user_id' => $data['user_id'] ?? $patient->user_id,
+        if ($beneficiary) {
+            $beneficiary->fill([
+                'email' => $data['email'] ?? $beneficiary->email,
+                'user_id' => $data['user_id'] ?? $beneficiary->user_id,
             ]);
-            $patient->save();
+            $beneficiary->save();
 
-            return ApiResponse::success($patient->fresh());
+            return ApiResponse::success($beneficiary->fresh());
         }
 
         $data['created_by_user_id'] = $user->id;
-        $patient = Patient::query()->create($data);
+        $beneficiary = Beneficiary::query()->create($data);
 
-        return ApiResponse::success($patient->fresh());
+        return ApiResponse::success($beneficiary->fresh());
     }
 
-    public function update(Patient $patient, array $data)
+    public function update(Beneficiary $beneficiary, array $data)
     {
         /** @var User $user */
         $user = auth()->user();
 
-        $patient = Patient::query()
+        $beneficiary = Beneficiary::query()
             ->accessibleToUser($user)
-            ->findOrFail($patient->id);
+            ->findOrFail($beneficiary->id);
 
         if (array_key_exists('user_id', $data) && ! $this->linkedUserIsValid($data['user_id'])) {
-            return ApiResponse::error('patient_user_invalid', null, 422);
+            return ApiResponse::error('beneficiary_user_invalid', null, 422);
         }
 
-        $patient->update($data);
+        $beneficiary->update($data);
 
-        return ApiResponse::success($patient->fresh());
+        return ApiResponse::success($beneficiary->fresh());
     }
 
-    private function canManagePatients(User $user): bool
+    private function canManageBeneficiaries(User $user): bool
     {
         return (bool) $user->isLoggedAsProfessional();
     }

@@ -2,7 +2,7 @@
 
 namespace App\Domains\Tasks\Services;
 
-use App\Domains\Patients\Models\Patient;
+use App\Domains\Beneficiaries\Models\Beneficiary;
 use App\Domains\Tasks\Enums\TaskParticipantRole;
 use App\Domains\Tasks\Enums\TaskParticipantStatus;
 use App\Domains\Tasks\Models\Task;
@@ -26,7 +26,7 @@ class TaskService
     {
         $query = Task::query()
             ->ownedByUser(auth()->user())
-            ->with(['subcategory', 'patient']);
+            ->with(['subcategory', 'beneficiary']);
 
         if (!empty($filters['status'])) {
             $query->whereStatus($filters['status']);
@@ -45,7 +45,7 @@ class TaskService
         /** @var ProfessionalUser $professional */
         $professional = auth()->user()->professionalUser;
 
-        $query = Task::query()->assignedToProfessional($professional)->with(['subcategory', 'patient']);
+        $query = Task::query()->assignedToProfessional($professional)->with(['subcategory', 'beneficiary']);
 
         if (!empty($filters['status'])) {
             $query->whereStatus($filters['status']);
@@ -66,7 +66,7 @@ class TaskService
 
         $query = Task::query()
             ->availableForProfessional($professional)
-            ->with(['subcategory', 'patient']);
+            ->with(['subcategory', 'beneficiary']);
 
         if (!empty($filters['status'])) {
             $query->whereStatus($filters['status']);
@@ -90,8 +90,8 @@ class TaskService
             return ApiResponse::error('task_forbidden', null, 403);
         }
 
-        if (array_key_exists('patient_id', $data) && ! $this->patientIsAccessible($data['patient_id'], $user)) {
-            return ApiResponse::error('patient_not_found', null, 404);
+        if (array_key_exists('beneficiary_id', $data) && ! $this->beneficiaryIsAccessible($data['beneficiary_id'], $user)) {
+            return ApiResponse::error('beneficiary_not_found', null, 404);
         }
 
         $task = DB::transaction(function () use ($user, $data) {
@@ -106,7 +106,7 @@ class TaskService
             return $task;
         });
 
-        return ApiResponse::success($task->fresh(['subcategory', 'patient']));
+        return ApiResponse::success($task->fresh(['subcategory', 'beneficiary']));
     }
 
     public function update(Task $task, array $data)
@@ -114,15 +114,15 @@ class TaskService
         /** @var User $user */
         $user = auth()->user();
 
-        if (array_key_exists('patient_id', $data) && ! $this->patientIsAccessible($data['patient_id'], $user)) {
-            return ApiResponse::error('patient_not_found', null, 404);
+        if (array_key_exists('beneficiary_id', $data) && ! $this->beneficiaryIsAccessible($data['beneficiary_id'], $user)) {
+            return ApiResponse::error('beneficiary_not_found', null, 404);
         }
 
         $task = Task::query()->ownedByUser($user)->findOrFail($task->id);
 
         $task->update($data);
 
-        return ApiResponse::success($task->fresh(['subcategory', 'patient']));
+        return ApiResponse::success($task->fresh(['subcategory', 'beneficiary']));
     }
 
     public function delete(Task $task)
@@ -141,15 +141,15 @@ class TaskService
         return (bool) $user->simpleUser || (bool) $user->professionalUser;
     }
 
-    private function patientIsAccessible(?int $patientId, User $user): bool
+    private function beneficiaryIsAccessible(?int $beneficiaryId, User $user): bool
     {
-        if ($patientId === null) {
+        if ($beneficiaryId === null) {
             return true;
         }
 
-        return Patient::query()
+        return Beneficiary::query()
             ->accessibleToUser($user)
-            ->whereKey($patientId)
+            ->whereKey($beneficiaryId)
             ->exists();
     }
 }

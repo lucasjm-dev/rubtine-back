@@ -2,8 +2,8 @@
 
 namespace App\Domains\Tasks\Models;
 
+use App\Domains\Beneficiaries\Models\Beneficiary;
 use App\Domains\Categories\Models\Subcategory;
-use App\Domains\Patients\Models\Patient;
 use App\Domains\Tasks\Enums\TaskParticipantRole;
 use App\Domains\Tasks\Enums\TaskParticipantStatus;
 use App\Domains\Users\Models\ProfessionalUser;
@@ -22,7 +22,7 @@ class Task extends Model
         'status',
         'public',
         'subcategory_id',
-        'patient_id',
+        'beneficiary_id',
     ];
 
     protected $hidden = [];
@@ -34,9 +34,9 @@ class Task extends Model
         return $this->belongsTo(Subcategory::class);
     }
 
-    public function patient()
+    public function beneficiary()
     {
-        return $this->belongsTo(Patient::class);
+        return $this->belongsTo(Beneficiary::class);
     }
 
     public function participants()

@@ -25,8 +25,8 @@ class CreateTaskRequest extends FormRequest
     {
 
         return [
-            'subcategory_id' => 'required|integer|exists:subcategories,id',
-            'patient_id' => 'nullable|integer|exists:patients,id',
+            'subcategory_id' => 'nullable|integer|exists:subcategories,id',
+            'beneficiary_id' => 'nullable|integer|exists:beneficiaries,id',
             'title' => 'required|string|max:64',
             'description' => 'nullable|string|max:255',
             'public' => 'nullable|boolean',

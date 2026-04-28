@@ -15,10 +15,13 @@ class CreateTaskTable extends Migration
     {
         Schema::create('tasks', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('subcategory_id')->constrained('subcategories')->onDelete('restrict')->nullable();
-            $table->foreignId('patient_id')
+            $table->foreignId('subcategory_id')
                 ->nullable()
-                ->constrained('patients')
+                ->constrained('subcategories')
+                ->onDelete('restrict');
+            $table->foreignId('beneficiary_id')
+                ->nullable()
+                ->constrained('beneficiaries')
                 ->nullOnDelete();
 
             $table->string('title', 256)->nullable();

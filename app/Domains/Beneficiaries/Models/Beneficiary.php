@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Domains\Patients\Models;
+namespace App\Domains\Beneficiaries\Models;
 
 use App\Domains\Tasks\Models\Task;
 use App\Domains\Users\Models\User;
@@ -8,9 +8,11 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Patient extends Model
+class Beneficiary extends Model
 {
     use HasFactory;
+
+    protected $table = 'beneficiaries';
 
     protected $fillable = [
         'name',
@@ -37,7 +39,7 @@ class Patient extends Model
 
     public function tasks()
     {
-        return $this->hasMany(Task::class);
+        return $this->hasMany(Task::class, 'beneficiary_id');
     }
 
     public function scopeAccessibleToUser(Builder $query, User $user): Builder

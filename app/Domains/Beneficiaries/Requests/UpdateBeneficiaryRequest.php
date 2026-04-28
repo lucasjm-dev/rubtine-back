@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Domains\Patients\Requests;
+namespace App\Domains\Beneficiaries\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdatePatientRequest extends FormRequest
+class UpdateBeneficiaryRequest extends FormRequest
 {
     public function authorize()
     {

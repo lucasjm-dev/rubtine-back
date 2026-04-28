@@ -4,6 +4,7 @@ namespace App\Domains\Tasks\Controllers;
 
 use App\Domains\Tasks\Models\TaskParticipant;
 use App\Domains\Tasks\Models\Task;
+use App\Domains\Tasks\Requests\CreateTaskParticipantRequest;
 use App\Domains\Tasks\Requests\TaskParticipantIndexRequest;
 use App\Domains\Tasks\Services\TaskParticipantService;
 use App\Http\Controllers\Controller;
@@ -16,14 +17,14 @@ class TaskParticipantController extends Controller
         return $service->paginate($request->validated());
     }
 
-    public function create(Task $task, TaskParticipantService $service)
+    public function create(CreateTaskParticipantRequest $request, Task $task, TaskParticipantService $service)
     {
-        return $service->create($task);
+        return $service->create($task, $request->validated());
     }
 
-    public function cancel(Task $task, TaskParticipantService $service)
+    public function cancel(TaskParticipant $taskParticipant, TaskParticipantService $service)
     {
-        return $service->cancel($task);
+        return $service->cancel($taskParticipant);
     }
 
     public function accept(TaskParticipant $taskParticipant, TaskParticipantService $service)

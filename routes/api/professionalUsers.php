@@ -11,7 +11,5 @@ Route::prefix('professional-user')->group(function () {
     Route::middleware(['auth:api', 'professionalUser'])->group(function () {
         Route::post('/update', [ProfessionalUserController::class, 'update']);
         Route::delete('/delete', [ProfessionalUserController::class, 'delete']);
-        Route::post('/request/{task}/create', [ProfessionalUserController::class, 'createRequest'])->where('task', '[0-9]{1,19}');
-        Route::post('/request/{task}/cancel', [ProfessionalUserController::class, 'cancelRequest'])->where('task', '[0-9]{1,19}');
     });
 });

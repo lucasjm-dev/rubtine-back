@@ -6,21 +6,24 @@ use App\Domains\Tasks\Enums\TaskParticipantRole;
 use App\Domains\Tasks\Enums\TaskParticipantStatus;
 use App\Domains\Tasks\Models\Task;
 use App\Domains\Tasks\Models\TaskParticipant;
-use App\Domains\Tasks\Rules\TaskParticipantRules;
 use App\Domains\Tasks\Rules\TaskParticipantTransitions;
+use App\Domains\Tasks\Validators\CreateParticipantContext;
+use App\Domains\Tasks\Validators\TaskParticipantValidator;
 use App\Domains\Users\Models\User;
 use App\Helpers\ApiResponse;
 use App\Support\Query\QueryPaginator;
 
 class TaskParticipantService
 {
-
     private QueryPaginator $paginator;
+    private TaskParticipantValidator $validator;
 
     public function __construct(
-        QueryPaginator $paginator
+        QueryPaginator $paginator,
+        TaskParticipantValidator $validator
     ) {
         $this->paginator = $paginator;
+        $this->validator = $validator;
     }
 
     public function paginate(array $filters)
@@ -32,6 +35,10 @@ class TaskParticipantService
         $query->relevantToUser($user);
 
         $query->withStatus($filters['status'] ?? null);
+        $query->with([
+            'user.simpleUser',
+            'user.professionalUser'
+        ]);
 
         if (!empty($filters['search'])) {
             $query->whereHas('task', function ($q) use ($filters) {
@@ -47,61 +54,30 @@ class TaskParticipantService
         );
     }
 
-
-
-    public function create(Task $task)
+    public function create(Task $task, array $data = [])
     {
         /** @var User $user */
         $user = auth()->user();
-        $role = $this->currentParticipantRole($user);
 
-        if (! $role) {
-            return ApiResponse::error('task_participant_invalid_actor', null, 403);
+        $ctx = $this->buildCreateContext($task, $user, $data);
+
+        if (! $ctx) {
+            return ApiResponse::error('task_participant_invalid_request', null, 422);
         }
 
-        $taskParticipant = TaskParticipant::findForTaskAndUser($task, $user, $role);
+        $error = $this->validator->validateCreate($ctx);
 
-        if (! TaskParticipantRules::canCreate($task, $user, $role)) {
-            return ApiResponse::error('task_participant_forbidden', null, 403);
+        if ($error) {
+            return ApiResponse::error($error, null, 422);
         }
 
-        if (! $taskParticipant) {
-            $task->participants()->create([
-                'user_id' => $user->id, //TODO: Check this. If simple user, should be linked user id
-                'role' => $role,
-                'status' => TaskParticipantStatus::PENDING,
-                'requested_by_user_id' => $user->id,
-            ]);
-
-            return ApiResponse::success();
-        }
-
-        if (! TaskParticipantTransitions::canPending($taskParticipant)) {
-            return ApiResponse::error('task_participant_status_invalid', null, 422);
-        }
-
-        $taskParticipant->status = TaskParticipantStatus::PENDING;
-        $taskParticipant->requested_by_user_id = $user->id;
-        $taskParticipant->save();
-
-        return ApiResponse::success();
+        return $this->upsertParticipant($task, $ctx);
     }
 
-    public function cancel(Task $task)
+    public function cancel(TaskParticipant $taskParticipant)
     {
         /** @var User $user */
         $user = auth()->user();
-        $role = $this->currentParticipantRole($user);
-
-        if (! $role) {
-            return ApiResponse::error('task_participant_invalid_actor', null, 403);
-        }
-
-        $taskParticipant = TaskParticipant::findForTaskAndUser($task, $user, $role);
-
-        if (! $taskParticipant) {
-            return ApiResponse::error('task_participant_not_found', null, 404);
-        }
 
         if ($taskParticipant->requested_by_user_id !== $user->id) {
             return ApiResponse::error('task_participant_forbidden', null, 403);
@@ -116,6 +92,7 @@ class TaskParticipantService
 
         return ApiResponse::success();
     }
+
 
     public function accept(TaskParticipant $taskParticipant)
     {
@@ -155,37 +132,97 @@ class TaskParticipantService
         return ApiResponse::success();
     }
 
-    private function currentParticipantRole(User $user): ?string
+
+    private function buildCreateContext(Task $task, User $actor, array $data): ?CreateParticipantContext
     {
-        if ($user->isLoggedAsProfessional()) {
+        $targetUser = $this->resolveTargetUser($actor, $data);
+
+        if (! $targetUser) {
+            return null;
+        }
+
+        $role = $data['role'] ?? $this->inferRoleFromLogin($actor);
+
+        if (! $role) {
+            return null;
+        }
+
+        return new CreateParticipantContext($task, $actor, $targetUser, $role);
+    }
+
+    private function resolveTargetUser(User $actor, array $data): ?User
+    {
+        $targetUserId = $data['user_id'] ?? null;
+
+        if (! $targetUserId) {
+            return $actor;
+        }
+
+        return User::query()->find($targetUserId);
+    }
+
+    /**
+     * When no role is explicitly provided, infer it from the actor's login type.
+     * Returns null if the login type doesn't map to a participant role.
+     */
+    private function inferRoleFromLogin(User $actor): ?string
+    {
+        if ($actor->isLoggedAsProfessional()) {
             return TaskParticipantRole::PROFESSIONAL;
         }
 
-        if ($user->isLoggedAsSimple()) {
+        if ($actor->isLoggedAsSimple()) {
             return TaskParticipantRole::SIMPLE;
         }
 
         return null;
     }
 
-    private function canRespondToParticipant(
-        User $user,
-        TaskParticipant $taskParticipant
-    ): bool {
+    private function upsertParticipant(Task $task, CreateParticipantContext $ctx)
+    {
+        $existing = TaskParticipant::findForTaskAndUser($task, $ctx->targetUser, $ctx->role);
+
+        if (! $existing) {
+            $task->participants()->create([
+                'user_id' => $ctx->targetUser->id,
+                'role' => $ctx->role,
+                'status' => TaskParticipantStatus::PENDING,
+                'requested_by_user_id' => $ctx->actor->id,
+            ]);
+
+            return ApiResponse::success();
+        }
+
+        if (! TaskParticipantTransitions::canPending($existing)) {
+            return ApiResponse::error('task_participant_status_invalid', null, 422);
+        }
+
+        $existing->status = TaskParticipantStatus::PENDING;
+        $existing->requested_by_user_id = $ctx->actor->id;
+        $existing->save();
+
+        return ApiResponse::success();
+    }
+
+    private function canRespondToParticipant(User $user, TaskParticipant $taskParticipant): bool
+    {
         $task = $taskParticipant->task;
 
         if (! $task || $taskParticipant->isOwner()) {
             return false;
         }
 
+        // The requester cannot accept/reject their own request
         if ($taskParticipant->requested_by_user_id === $user->id) {
             return false;
         }
 
+        // If the participant requested it themselves, only the owner can respond
         if ($taskParticipant->requested_by_user_id === $taskParticipant->user_id) {
             return $task->isOwnedBy($user);
         }
 
+        // Otherwise, only the target user can respond
         return $taskParticipant->user_id === $user->id;
     }
 }

@@ -19,7 +19,8 @@ class ProfessionalUser extends Model
         'user_id',
         'birth_date',
         'about_me',
-        'profile_photo'
+        'profile_photo',
+        'subcategory_id'
     ];
 
     protected $hidden = ['subcategory_id'];

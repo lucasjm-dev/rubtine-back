@@ -2,7 +2,7 @@
 
 namespace App\Domains\Users\Models;
 
-use App\Domains\Patients\Models\Patient;
+use App\Domains\Beneficiaries\Models\Beneficiary;
 use App\Domains\Tasks\Enums\TaskParticipantRole;
 use App\Domains\Tasks\Models\Task;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -153,13 +153,13 @@ class User extends Authenticatable implements JWTSubject
             ->withTimestamps();
     }
 
-    public function createdPatients()
+    public function createdBeneficiaries()
     {
-        return $this->hasMany(Patient::class, 'created_by_user_id');
+        return $this->hasMany(Beneficiary::class, 'created_by_user_id');
     }
 
-    public function linkedPatients()
+    public function linkedBeneficiaries()
     {
-        return $this->hasMany(Patient::class, 'user_id');
+        return $this->hasMany(Beneficiary::class, 'user_id');
     }
 }
