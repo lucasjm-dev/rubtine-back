@@ -3,8 +3,8 @@
 namespace App\Domains\Users\Models;
 
 use App\Domains\Beneficiaries\Models\Beneficiary;
-use App\Domains\Tasks\Enums\TaskParticipantRole;
 use App\Domains\Tasks\Models\Task;
+use App\Domains\Tasks\Enums\TaskParticipantTaskRole;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Notifications\Notifiable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
@@ -148,8 +148,8 @@ class User extends Authenticatable implements JWTSubject
             'user_id',
             'task_id'
         )
-            ->wherePivot('role', TaskParticipantRole::OWNER)
-            ->withPivot(['role', 'status', 'requested_by_user_id'])
+            ->wherePivot('task_role', TaskParticipantTaskRole::OWNER)
+            ->withPivot(['task_role', 'participant_profile', 'status', 'requested_by_user_id'])
             ->withTimestamps();
     }
 

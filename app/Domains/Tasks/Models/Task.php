@@ -4,8 +4,9 @@ namespace App\Domains\Tasks\Models;
 
 use App\Domains\Beneficiaries\Models\Beneficiary;
 use App\Domains\Categories\Models\Subcategory;
-use App\Domains\Tasks\Enums\TaskParticipantRole;
+use App\Domains\Tasks\Enums\TaskParticipantProfile;
 use App\Domains\Tasks\Enums\TaskParticipantStatus;
+use App\Domains\Tasks\Enums\TaskParticipantTaskRole;
 use App\Domains\Users\Models\ProfessionalUser;
 use App\Domains\Users\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -52,8 +53,8 @@ class Task extends Model
             'task_id',
             'user_id'
         )
-            ->wherePivot('role', TaskParticipantRole::OWNER)
-            ->withPivot(['role', 'status', 'requested_by_user_id'])
+            ->wherePivot('task_role', TaskParticipantTaskRole::OWNER)
+            ->withPivot(['task_role', 'participant_profile', 'status', 'requested_by_user_id'])
             ->withTimestamps();
     }
 
@@ -67,8 +68,9 @@ class Task extends Model
             'id',
             'user_id'
         )
-            ->wherePivot('role', TaskParticipantRole::PROFESSIONAL)
-            ->withPivot(['role', 'status', 'requested_by_user_id'])
+            ->wherePivot('task_role', TaskParticipantTaskRole::PARTICIPANT)
+            ->wherePivot('participant_profile', TaskParticipantProfile::PROFESSIONAL)
+            ->withPivot(['task_role', 'participant_profile', 'status', 'requested_by_user_id'])
             ->withTimestamps();
     }
 

@@ -3,8 +3,9 @@
 namespace App\Domains\Tasks\Services;
 
 use App\Domains\Beneficiaries\Models\Beneficiary;
-use App\Domains\Tasks\Enums\TaskParticipantRole;
+use App\Domains\Tasks\Enums\TaskParticipantProfile;
 use App\Domains\Tasks\Enums\TaskParticipantStatus;
+use App\Domains\Tasks\Enums\TaskParticipantTaskRole;
 use App\Domains\Tasks\Models\Task;
 use App\Domains\Users\Models\User;
 use App\Helpers\ApiResponse;
@@ -85,8 +86,9 @@ class TaskService
     {
         /** @var User $user */
         $user = auth()->user();
+        $ownerProfile = $this->inferParticipantProfileFromLogin($user);
 
-        if (! $this->canOwnTasks($user)) {
+        if (! $this->canOwnTasks($user) || ! $ownerProfile) {
             return ApiResponse::error('task_forbidden', null, 403);
         }
 
@@ -94,11 +96,12 @@ class TaskService
             return ApiResponse::error('beneficiary_not_found', null, 404);
         }
 
-        $task = DB::transaction(function () use ($user, $data) {
+        $task = DB::transaction(function () use ($user, $data, $ownerProfile) {
             $task = Task::query()->create($data);
             $task->participants()->create([
                 'user_id' => $user->id,
-                'role' => TaskParticipantRole::OWNER,
+                'task_role' => TaskParticipantTaskRole::OWNER,
+                'participant_profile' => $ownerProfile,
                 'status' => TaskParticipantStatus::ACCEPTED,
                 'requested_by_user_id' => $user->id,
             ]);
@@ -139,6 +142,19 @@ class TaskService
     private function canOwnTasks(User $user): bool
     {
         return (bool) $user->simpleUser || (bool) $user->professionalUser;
+    }
+
+    private function inferParticipantProfileFromLogin(User $user): ?string
+    {
+        if ($user->isLoggedAsProfessional()) {
+            return TaskParticipantProfile::PROFESSIONAL;
+        }
+
+        if ($user->isLoggedAsSimple()) {
+            return TaskParticipantProfile::SIMPLE;
+        }
+
+        return null;
     }
 
     private function beneficiaryIsAccessible(?int $beneficiaryId, User $user): bool

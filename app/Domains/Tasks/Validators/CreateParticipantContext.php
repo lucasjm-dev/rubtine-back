@@ -10,19 +10,19 @@ final class CreateParticipantContext
     public Task $task;
     public User $actor;
     public User $targetUser;
-    public string $role;
+    public string $participantProfile;
     public bool $actorIsOwner;
 
     public function __construct(
         Task $task,
         User $actor,
         User $targetUser,
-        string $role
+        string $participantProfile
     ) {
         $this->task = $task;
         $this->actor = $actor;
         $this->targetUser = $targetUser;
-        $this->role = $role;
+        $this->participantProfile = $participantProfile;
         $this->actorIsOwner = $task->isOwnedBy($actor);
     }
 

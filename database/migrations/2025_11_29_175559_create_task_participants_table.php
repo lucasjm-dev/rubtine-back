@@ -1,7 +1,8 @@
 <?php
 
-use App\Domains\Tasks\Enums\TaskParticipantRole;
+use App\Domains\Tasks\Enums\TaskParticipantProfile;
 use App\Domains\Tasks\Enums\TaskParticipantStatus;
+use App\Domains\Tasks\Enums\TaskParticipantTaskRole;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -23,7 +24,8 @@ class CreateTaskParticipantsTable extends Migration
             $table->foreignId('user_id')
                 ->constrained('users')
                 ->onDelete('cascade');
-            $table->string('role', 32)->default(TaskParticipantRole::PROFESSIONAL);
+            $table->string('task_role', 32)->default(TaskParticipantTaskRole::PARTICIPANT);
+            $table->string('participant_profile', 32)->default(TaskParticipantProfile::PROFESSIONAL);
             $table->string('status', 32)->default(TaskParticipantStatus::PENDING);
             $table->foreignId('requested_by_user_id')
                 ->nullable()
@@ -31,7 +33,7 @@ class CreateTaskParticipantsTable extends Migration
                 ->nullOnDelete();
 
             $table->timestamps();
-            $table->unique(['task_id', 'user_id', 'role']);
+            $table->unique(['task_id', 'user_id', 'task_role', 'participant_profile']);
         });
     }
 

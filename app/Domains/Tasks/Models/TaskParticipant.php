@@ -2,7 +2,8 @@
 
 namespace App\Domains\Tasks\Models;
 
-use App\Domains\Tasks\Enums\TaskParticipantRole;
+use App\Domains\Tasks\Enums\TaskParticipantProfile;
+use App\Domains\Tasks\Enums\TaskParticipantTaskRole;
 use App\Domains\Users\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -15,7 +16,8 @@ class TaskParticipant extends Model
     protected $fillable = [
         'task_id',
         'user_id',
-        'role',
+        'task_role',
+        'participant_profile',
         'status',
         'requested_by_user_id',
     ];
@@ -40,38 +42,47 @@ class TaskParticipant extends Model
     public static function findForTaskAndUser(
         Task $task,
         User $user,
-        ?string $role = null
+        ?string $taskRole = null,
+        ?string $participantProfile = null
     ): ?self {
         $query = self::query()
             ->where('task_id', $task->id)
             ->where('user_id', $user->id);
 
-        if ($role) {
-            $query->where('role', $role);
+        if ($taskRole) {
+            $query->where('task_role', $taskRole);
+        }
+
+        if ($participantProfile) {
+            $query->where('participant_profile', $participantProfile);
         }
 
         return $query->first();
     }
 
-    public function scopeForRole(Builder $query, string $role): Builder
+    public function scopeForTaskRole(Builder $query, string $taskRole): Builder
     {
-        return $query->where('role', $role);
+        return $query->where('task_role', $taskRole);
     }
 
     public function scopeOwners(Builder $query): Builder
     {
-        return $query->forRole(TaskParticipantRole::OWNER);
+        return $query->forTaskRole(TaskParticipantTaskRole::OWNER);
+    }
+
+    public function scopeParticipants(Builder $query): Builder
+    {
+        return $query->forTaskRole(TaskParticipantTaskRole::PARTICIPANT);
     }
 
     public function scopeProfessionals(Builder $query): Builder
     {
-        return $query->forRole(TaskParticipantRole::PROFESSIONAL);
+        return $query->where('participant_profile', TaskParticipantProfile::PROFESSIONAL);
     }
 
     public function scopeSimpleUsers(Builder $query): Builder
     {
-        return $query
-            ->forRole(TaskParticipantRole::SIMPLE);
+        return $query->where('participant_profile', TaskParticipantProfile::SIMPLE);
     }
 
     public function scopeForUser(Builder $query, User $user): Builder
@@ -103,16 +114,16 @@ class TaskParticipant extends Model
 
     public function isOwner(): bool
     {
-        return $this->role === TaskParticipantRole::OWNER;
+        return $this->task_role === TaskParticipantTaskRole::OWNER;
     }
 
-    public function isProfessional(): bool
+    public function hasProfessionalProfile(): bool
     {
-        return $this->role === TaskParticipantRole::PROFESSIONAL;
+        return $this->participant_profile === TaskParticipantProfile::PROFESSIONAL;
     }
 
-    public function isSimple(): bool
+    public function hasSimpleProfile(): bool
     {
-        return $this->role === TaskParticipantRole::SIMPLE;
+        return $this->participant_profile === TaskParticipantProfile::SIMPLE;
     }
 }

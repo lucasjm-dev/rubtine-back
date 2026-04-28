@@ -2,8 +2,9 @@
 
 namespace Tests\Unit;
 
-use App\Domains\Tasks\Enums\TaskParticipantRole;
+use App\Domains\Tasks\Enums\TaskParticipantProfile;
 use App\Domains\Tasks\Enums\TaskParticipantStatus;
+use App\Domains\Tasks\Enums\TaskParticipantTaskRole;
 use App\Domains\Tasks\Models\Task;
 use App\Domains\Tasks\Validators\CreateParticipantContext;
 use App\Domains\Tasks\Validators\TaskParticipantValidator;
@@ -74,7 +75,10 @@ class TaskParticipantValidatorTest extends TestCase
         $hasAcceptedSimple = $options['has_accepted_simple'] ?? false;
         $participantsQuery = Mockery::mock();
         $participantsQuery->shouldReceive('where')
-            ->with('role', TaskParticipantRole::SIMPLE)
+            ->with('task_role', TaskParticipantTaskRole::PARTICIPANT)
+            ->andReturnSelf();
+        $participantsQuery->shouldReceive('where')
+            ->with('participant_profile', TaskParticipantProfile::SIMPLE)
             ->andReturnSelf();
         $participantsQuery->shouldReceive('where')
             ->with('status', TaskParticipantStatus::ACCEPTED)
@@ -88,9 +92,9 @@ class TaskParticipantValidatorTest extends TestCase
         return $task;
     }
 
-    private function buildCtx(Task $task, User $actor, User $target, string $role): CreateParticipantContext
+    private function buildCtx(Task $task, User $actor, User $target, string $participantProfile): CreateParticipantContext
     {
-        return new CreateParticipantContext($task, $actor, $target, $role);
+        return new CreateParticipantContext($task, $actor, $target, $participantProfile);
     }
 
     // ─── Success Cases ───────────────────────────────────────
@@ -106,7 +110,7 @@ class TaskParticipantValidatorTest extends TestCase
         ]);
         $task = $this->makeTask($owner, 5);
 
-        $ctx = $this->buildCtx($task, $owner, $target, TaskParticipantRole::PROFESSIONAL);
+        $ctx = $this->buildCtx($task, $owner, $target, TaskParticipantProfile::PROFESSIONAL);
 
         $this->assertNull($this->validator->validateCreate($ctx));
     }
@@ -121,7 +125,7 @@ class TaskParticipantValidatorTest extends TestCase
         ]);
         $task = $this->makeTask($owner);
 
-        $ctx = $this->buildCtx($task, $owner, $target, TaskParticipantRole::SIMPLE);
+        $ctx = $this->buildCtx($task, $owner, $target, TaskParticipantProfile::SIMPLE);
 
         $this->assertNull($this->validator->validateCreate($ctx));
     }
@@ -137,7 +141,7 @@ class TaskParticipantValidatorTest extends TestCase
         ]);
         $task = $this->makeTask($owner);
 
-        $ctx = $this->buildCtx($task, $simpleUser, $simpleUser, TaskParticipantRole::SIMPLE);
+        $ctx = $this->buildCtx($task, $simpleUser, $simpleUser, TaskParticipantProfile::SIMPLE);
 
         $this->assertNull($this->validator->validateCreate($ctx));
     }
@@ -155,7 +159,7 @@ class TaskParticipantValidatorTest extends TestCase
         ]);
         $task = $this->makeTask($owner, 5);
 
-        $ctx = $this->buildCtx($task, $owner, $owner, TaskParticipantRole::PROFESSIONAL);
+        $ctx = $this->buildCtx($task, $owner, $owner, TaskParticipantProfile::PROFESSIONAL);
         $error = $this->validator->validateCreate($ctx);
 
         $this->assertEquals('task_participant_target_is_owner', $error);
@@ -173,7 +177,7 @@ class TaskParticipantValidatorTest extends TestCase
         ]);
         $task = $this->makeTask($owner, 5);
 
-        $ctx = $this->buildCtx($task, $profUser, $profUser, TaskParticipantRole::PROFESSIONAL);
+        $ctx = $this->buildCtx($task, $profUser, $profUser, TaskParticipantProfile::PROFESSIONAL);
         $this->assertNull($this->validator->validateCreate($ctx));
     }
 
@@ -190,7 +194,7 @@ class TaskParticipantValidatorTest extends TestCase
         ]);
         $task = $this->makeTask($owner, 5);
 
-        $ctx = $this->buildCtx($task, $simpleUser, $simpleUser, TaskParticipantRole::PROFESSIONAL);
+        $ctx = $this->buildCtx($task, $simpleUser, $simpleUser, TaskParticipantProfile::PROFESSIONAL);
         $error = $this->validator->validateCreate($ctx);
 
         $this->assertEquals('task_participant_role_mismatch', $error);
@@ -206,7 +210,7 @@ class TaskParticipantValidatorTest extends TestCase
         ]);
         $task = $this->makeTask($owner, 1, ['has_accepted_simple' => true]);
 
-        $ctx = $this->buildCtx($task, $owner, $target, TaskParticipantRole::SIMPLE);
+        $ctx = $this->buildCtx($task, $owner, $target, TaskParticipantProfile::SIMPLE);
         $error = $this->validator->validateCreate($ctx);
 
         $this->assertEquals('task_participant_simple_slot_taken', $error);
@@ -224,7 +228,7 @@ class TaskParticipantValidatorTest extends TestCase
         ]);
         $task = $this->makeTask($owner);
 
-        $ctx = $this->buildCtx($task, $owner, $target, TaskParticipantRole::SIMPLE);
+        $ctx = $this->buildCtx($task, $owner, $target, TaskParticipantProfile::SIMPLE);
         $error = $this->validator->validateCreate($ctx);
 
         $this->assertEquals('task_participant_target_missing_profile', $error);
@@ -247,7 +251,7 @@ class TaskParticipantValidatorTest extends TestCase
         ]);
         $task = $this->makeTask($owner, 5);
 
-        $ctx = $this->buildCtx($task, $profUser, $anotherUser, TaskParticipantRole::PROFESSIONAL);
+        $ctx = $this->buildCtx($task, $profUser, $anotherUser, TaskParticipantProfile::PROFESSIONAL);
         $error = $this->validator->validateCreate($ctx);
 
         $this->assertEquals('task_participant_forbidden', $error);
@@ -264,7 +268,7 @@ class TaskParticipantValidatorTest extends TestCase
         ]);
         $task = $this->makeTask($owner, 5);
 
-        $ctx = $this->buildCtx($task, $owner, $target, TaskParticipantRole::PROFESSIONAL);
+        $ctx = $this->buildCtx($task, $owner, $target, TaskParticipantProfile::PROFESSIONAL);
         $error = $this->validator->validateCreate($ctx);
 
         $this->assertEquals('task_participant_subcategory_mismatch', $error);

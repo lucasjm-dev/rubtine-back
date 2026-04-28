@@ -3,8 +3,9 @@
 namespace App\Domains\Users\Models;
 
 use App\Domains\Categories\Models\Subcategory;
-use App\Domains\Tasks\Enums\TaskParticipantRole;
+use App\Domains\Tasks\Enums\TaskParticipantProfile;
 use App\Domains\Tasks\Enums\TaskParticipantStatus;
+use App\Domains\Tasks\Enums\TaskParticipantTaskRole;
 use App\Domains\Tasks\Models\Task;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -56,8 +57,9 @@ class ProfessionalUser extends Model
             'user_id',
             'id'
         )
-            ->wherePivot('role', TaskParticipantRole::PROFESSIONAL)
-            ->withPivot(['role', 'status', 'requested_by_user_id'])
+            ->wherePivot('task_role', TaskParticipantTaskRole::PARTICIPANT)
+            ->wherePivot('participant_profile', TaskParticipantProfile::PROFESSIONAL)
+            ->withPivot(['task_role', 'participant_profile', 'status', 'requested_by_user_id'])
             ->withTimestamps();
     }
 

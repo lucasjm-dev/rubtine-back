@@ -2,7 +2,7 @@
 
 namespace App\Domains\Tasks\Requests;
 
-use App\Domains\Tasks\Enums\TaskParticipantRole;
+use App\Domains\Tasks\Enums\TaskParticipantProfile;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -17,12 +17,13 @@ class CreateTaskParticipantRequest extends FormRequest
     {
         return [
             'user_id' => 'nullable|integer|exists:users,id',
-            'role' => [
+            'participant_profile' => [
+                'required_with:user_id',
                 'nullable',
                 'string',
                 Rule::in([
-                    TaskParticipantRole::SIMPLE,
-                    TaskParticipantRole::PROFESSIONAL,
+                    TaskParticipantProfile::SIMPLE,
+                    TaskParticipantProfile::PROFESSIONAL,
                 ]),
             ],
         ];

@@ -2,8 +2,9 @@
 
 namespace App\Domains\Tasks\Services;
 
-use App\Domains\Tasks\Enums\TaskParticipantRole;
+use App\Domains\Tasks\Enums\TaskParticipantProfile;
 use App\Domains\Tasks\Enums\TaskParticipantStatus;
+use App\Domains\Tasks\Enums\TaskParticipantTaskRole;
 use App\Domains\Tasks\Models\Task;
 use App\Domains\Tasks\Models\TaskParticipant;
 use App\Domains\Tasks\Rules\TaskParticipantTransitions;
@@ -29,7 +30,7 @@ class TaskParticipantService
     public function paginate(array $filters)
     {
         $query = TaskParticipant::query()
-            ->where('role', '!=', TaskParticipantRole::OWNER);
+            ->where('task_role', '!=', TaskParticipantTaskRole::OWNER);
         /** @var User  **/
         $user = auth()->user();
         $query->relevantToUser($user);
@@ -141,13 +142,17 @@ class TaskParticipantService
             return null;
         }
 
-        $role = $data['role'] ?? $this->inferRoleFromLogin($actor);
+        $participantProfile = $data['participant_profile'] ?? null;
 
-        if (! $role) {
+        if (! $participantProfile && ! array_key_exists('user_id', $data)) {
+            $participantProfile = $this->inferParticipantProfileFromLogin($actor);
+        }
+
+        if (! $participantProfile) {
             return null;
         }
 
-        return new CreateParticipantContext($task, $actor, $targetUser, $role);
+        return new CreateParticipantContext($task, $actor, $targetUser, $participantProfile);
     }
 
     private function resolveTargetUser(User $actor, array $data): ?User
@@ -162,17 +167,17 @@ class TaskParticipantService
     }
 
     /**
-     * When no role is explicitly provided, infer it from the actor's login type.
-     * Returns null if the login type doesn't map to a participant role.
+     * When no participant profile is explicitly provided, infer it from the actor's login type.
+     * Returns null if the login type doesn't map to a participant profile.
      */
-    private function inferRoleFromLogin(User $actor): ?string
+    private function inferParticipantProfileFromLogin(User $actor): ?string
     {
         if ($actor->isLoggedAsProfessional()) {
-            return TaskParticipantRole::PROFESSIONAL;
+            return TaskParticipantProfile::PROFESSIONAL;
         }
 
         if ($actor->isLoggedAsSimple()) {
-            return TaskParticipantRole::SIMPLE;
+            return TaskParticipantProfile::SIMPLE;
         }
 
         return null;
@@ -180,12 +185,18 @@ class TaskParticipantService
 
     private function upsertParticipant(Task $task, CreateParticipantContext $ctx)
     {
-        $existing = TaskParticipant::findForTaskAndUser($task, $ctx->targetUser, $ctx->role);
+        $existing = TaskParticipant::findForTaskAndUser(
+            $task,
+            $ctx->targetUser,
+            TaskParticipantTaskRole::PARTICIPANT,
+            $ctx->participantProfile
+        );
 
         if (! $existing) {
             $task->participants()->create([
                 'user_id' => $ctx->targetUser->id,
-                'role' => $ctx->role,
+                'task_role' => TaskParticipantTaskRole::PARTICIPANT,
+                'participant_profile' => $ctx->participantProfile,
                 'status' => TaskParticipantStatus::PENDING,
                 'requested_by_user_id' => $ctx->actor->id,
             ]);

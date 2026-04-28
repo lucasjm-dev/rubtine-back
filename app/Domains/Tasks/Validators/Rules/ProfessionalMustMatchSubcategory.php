@@ -2,18 +2,18 @@
 
 namespace App\Domains\Tasks\Validators\Rules;
 
-use App\Domains\Tasks\Enums\TaskParticipantRole;
+use App\Domains\Tasks\Enums\TaskParticipantProfile;
 use App\Domains\Tasks\Validators\CreateParticipantContext;
 
 /**
- * When the role is PROFESSIONAL, the target user's professional subcategory
+ * When the participant profile is PROFESSIONAL, the target user's professional subcategory
  * must match the task's subcategory.
  */
 final class ProfessionalMustMatchSubcategory implements ParticipantRule
 {
     public function validate(CreateParticipantContext $ctx): ?string
     {
-        if ($ctx->role !== TaskParticipantRole::PROFESSIONAL) {
+        if ($ctx->participantProfile !== TaskParticipantProfile::PROFESSIONAL) {
             return null;
         }
 

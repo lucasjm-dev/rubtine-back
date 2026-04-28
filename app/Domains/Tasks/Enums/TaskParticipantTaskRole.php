@@ -2,18 +2,16 @@
 
 namespace App\Domains\Tasks\Enums;
 
-final class TaskParticipantRole
+final class TaskParticipantTaskRole
 {
     public const OWNER = 'OWNER';
-    public const SIMPLE = 'SIMPLE';
-    public const PROFESSIONAL = 'PROFESSIONAL';
+    public const PARTICIPANT = 'PARTICIPANT';
 
     public static function values(): array
     {
         return [
             self::OWNER,
-            self::SIMPLE,
-            self::PROFESSIONAL,
+            self::PARTICIPANT,
         ];
     }
 
