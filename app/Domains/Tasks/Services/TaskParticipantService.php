@@ -36,10 +36,6 @@ class TaskParticipantService
         $query->relevantToUser($user);
 
         $query->withStatus($filters['status'] ?? null);
-        $query->with([
-            'user.simpleUser',
-            'user.professionalUser'
-        ]);
 
         if (!empty($filters['search'])) {
             $query->whereHas('task', function ($q) use ($filters) {
@@ -48,7 +44,7 @@ class TaskParticipantService
         }
 
         return $this->paginator->paginate(
-            $query->with('task'),
+            $query->withListRelations(),
             $filters,
             ['id', 'status'],
             []
@@ -172,15 +168,7 @@ class TaskParticipantService
      */
     private function inferParticipantProfileFromLogin(User $actor): ?string
     {
-        if ($actor->isLoggedAsProfessional()) {
-            return TaskParticipantProfile::PROFESSIONAL;
-        }
-
-        if ($actor->isLoggedAsSimple()) {
-            return TaskParticipantProfile::SIMPLE;
-        }
-
-        return null;
+        return TaskParticipantProfile::fromUserLogin($actor);
     }
 
     private function upsertParticipant(Task $task, CreateParticipantContext $ctx)

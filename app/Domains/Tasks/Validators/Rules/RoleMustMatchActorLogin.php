@@ -12,7 +12,8 @@ use App\Domains\Tasks\Validators\CreateParticipantContext;
  *   only on tasks owned by a simple user.
  * - A professional logged-in user cannot self-assign the PROFESSIONAL profile
  *   on tasks owned by another professional.
- * - A simple logged-in user can ONLY create with participant profile SIMPLE, and only for themselves.
+ * - A logged-in user creating for themselves must use the participant profile
+ *   that matches their active login profile.
  * - The owner creating for others can assign any valid participant profile.
  */
 final class RoleMustMatchActorLogin implements ParticipantRule
@@ -24,20 +25,13 @@ final class RoleMustMatchActorLogin implements ParticipantRule
             return null;
         }
 
-        // if ($ctx->actor->isLoggedAsProfessional()) {
-        //     if (
-        //         $ctx->participantProfile === TaskParticipantProfile::PROFESSIONAL
-        //         && $ctx->task->ownerHasProfessionalProfile()
-        //     ) {
-        //         return 'task_participant_role_forbidden';
-        //     }
-        // }
+        $actorParticipantProfile = TaskParticipantProfile::fromUserLogin($ctx->actor);
 
-        // Simple logged-in: can only create with SIMPLE participant profile
-        if ($ctx->actor->isLoggedAsSimple()) {
-            if ($ctx->participantProfile !== TaskParticipantProfile::SIMPLE) {
-                return 'task_participant_role_mismatch';
-            }
+        if (
+            $actorParticipantProfile
+            && $ctx->participantProfile !== $actorParticipantProfile
+        ) {
+            return 'task_participant_role_mismatch';
         }
 
         return null;

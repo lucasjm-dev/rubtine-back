@@ -2,7 +2,7 @@
 
 namespace App\Domains\Auth\Requests;
 
-use App\Domains\Users\Models\User;
+use App\Support\Users\UserProfiles;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -30,11 +30,7 @@ class SwitchLoginUserRequest extends FormRequest
             'login_as' => [
                 'required',
                 'string',
-                Rule::in([
-                    User::TYPE_SIMPLE,
-                    User::TYPE_PROFESSIONAL,
-                    User::TYPE_COMPANY,
-                ]),
+                Rule::in(UserProfiles::types()),
             ],
         ];
     }

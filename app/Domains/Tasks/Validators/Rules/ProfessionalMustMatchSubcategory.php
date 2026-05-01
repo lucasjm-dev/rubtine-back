@@ -17,7 +17,10 @@ final class ProfessionalMustMatchSubcategory implements ParticipantRule
             return null;
         }
 
-        $professional = $ctx->targetUser->professionalUser;
+        $professionalRelation = TaskParticipantProfile::relationFor(TaskParticipantProfile::PROFESSIONAL);
+        $professional = $professionalRelation
+            ? $ctx->targetUser->{$professionalRelation}
+            : null;
 
         if (! $professional || $professional->subcategory_id !== $ctx->task->subcategory_id) {
             return 'task_participant_subcategory_mismatch';

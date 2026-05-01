@@ -21,10 +21,7 @@ class CreateTaskParticipantRequest extends FormRequest
                 'required_with:user_id',
                 'nullable',
                 'string',
-                Rule::in([
-                    TaskParticipantProfile::SIMPLE,
-                    TaskParticipantProfile::PROFESSIONAL,
-                ]),
+                Rule::in(TaskParticipantProfile::values()),
             ],
         ];
     }

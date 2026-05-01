@@ -38,6 +38,8 @@ class TaskParticipantValidatorTest extends TestCase
         $user->id = $overrides['id'] ?? rand(100, 9999);
 
         $loggedAs = $overrides['logged_as'] ?? null;
+        $user->shouldReceive('loggedAs')
+            ->andReturn($loggedAs);
         $user->shouldReceive('isLoggedAsProfessional')
             ->andReturn($loggedAs === User::TYPE_PROFESSIONAL);
         $user->shouldReceive('isLoggedAsSimple')
@@ -195,6 +197,25 @@ class TaskParticipantValidatorTest extends TestCase
         $task = $this->makeTask($owner, 5);
 
         $ctx = $this->buildCtx($task, $simpleUser, $simpleUser, TaskParticipantProfile::PROFESSIONAL);
+        $error = $this->validator->validateCreate($ctx);
+
+        $this->assertEquals('task_participant_role_mismatch', $error);
+    }
+
+    /** @test */
+    public function professional_user_cannot_create_with_simple_role_when_logged_as_professional()
+    {
+        $owner = $this->makeUser(['id' => 1]);
+        $professionalUser = $this->makeUser([
+            'id' => 2,
+            'logged_as' => User::TYPE_PROFESSIONAL,
+            'simpleUser' => true,
+            'professionalUser' => true,
+            'subcategory_id' => 5,
+        ]);
+        $task = $this->makeTask($owner, 5);
+
+        $ctx = $this->buildCtx($task, $professionalUser, $professionalUser, TaskParticipantProfile::SIMPLE);
         $error = $this->validator->validateCreate($ctx);
 
         $this->assertEquals('task_participant_role_mismatch', $error);

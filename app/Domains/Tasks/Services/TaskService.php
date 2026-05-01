@@ -7,9 +7,11 @@ use App\Domains\Tasks\Enums\TaskParticipantProfile;
 use App\Domains\Tasks\Enums\TaskParticipantStatus;
 use App\Domains\Tasks\Enums\TaskParticipantTaskRole;
 use App\Domains\Tasks\Models\Task;
+use App\Domains\Users\Models\ProfessionalUser;
 use App\Domains\Users\Models\User;
 use App\Helpers\ApiResponse;
 use App\Support\Query\QueryPaginator;
+use App\Support\Users\UserProfiles;
 use Illuminate\Support\Facades\DB;
 
 class TaskService
@@ -27,7 +29,7 @@ class TaskService
     {
         $query = Task::query()
             ->ownedByUser(auth()->user())
-            ->with(['subcategory', 'beneficiary']);
+            ->withListRelations();
 
         if (!empty($filters['status'])) {
             $query->whereStatus($filters['status']);
@@ -46,7 +48,9 @@ class TaskService
         /** @var ProfessionalUser $professional */
         $professional = auth()->user()->professionalUser;
 
-        $query = Task::query()->assignedToProfessional($professional)->with(['subcategory', 'beneficiary']);
+        $query = Task::query()
+            ->assignedToProfessional($professional)
+            ->withListRelations();
 
         if (!empty($filters['status'])) {
             $query->whereStatus($filters['status']);
@@ -67,7 +71,7 @@ class TaskService
 
         $query = Task::query()
             ->availableForProfessional($professional)
-            ->with(['subcategory', 'beneficiary']);
+            ->withListRelations();
 
         if (!empty($filters['status'])) {
             $query->whereStatus($filters['status']);
@@ -141,20 +145,15 @@ class TaskService
 
     private function canOwnTasks(User $user): bool
     {
-        return (bool) $user->simpleUser || (bool) $user->professionalUser;
+        return UserProfiles::hasAnyProfile(
+            $user,
+            TaskParticipantProfile::userProfileTypes()
+        );
     }
 
     private function inferParticipantProfileFromLogin(User $user): ?string
     {
-        if ($user->isLoggedAsProfessional()) {
-            return TaskParticipantProfile::PROFESSIONAL;
-        }
-
-        if ($user->isLoggedAsSimple()) {
-            return TaskParticipantProfile::SIMPLE;
-        }
-
-        return null;
+        return TaskParticipantProfile::fromUserLogin($user);
     }
 
     private function beneficiaryIsAccessible(?int $beneficiaryId, User $user): bool

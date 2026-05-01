@@ -5,6 +5,7 @@ namespace App\Domains\Users\Models;
 use App\Domains\Beneficiaries\Models\Beneficiary;
 use App\Domains\Tasks\Models\Task;
 use App\Domains\Tasks\Enums\TaskParticipantTaskRole;
+use App\Support\Users\UserProfiles;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Notifications\Notifiable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
@@ -28,9 +29,6 @@ class User extends Authenticatable implements JWTSubject
     protected $hidden = [
         'password',
         'remember_token',
-        'simpleUser',
-        'professionalUser',
-        'companyUser'
     ];
 
     protected $casts = [
@@ -68,20 +66,22 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasOne(CompanyUser::class);
     }
 
+    public function getHidden()
+    {
+        return array_values(array_unique(array_merge(
+            parent::getHidden(),
+            UserProfiles::relationNames()
+        )));
+    }
+
     public function getAvailableTypes(): array
     {
         $types = [];
 
-        if ($this->simpleUser()->exists()) {
-            $types[] = self::TYPE_SIMPLE;
-        }
-
-        if ($this->professionalUser()->exists()) {
-            $types[] = self::TYPE_PROFESSIONAL;
-        }
-
-        if ($this->companyUser()->exists()) {
-            $types[] = self::TYPE_COMPANY;
+        foreach (UserProfiles::all() as $type => $definition) {
+            if ($this->{$definition['relation']}()->exists()) {
+                $types[] = $type;
+            }
         }
 
         return $types;
@@ -98,16 +98,12 @@ class User extends Authenticatable implements JWTSubject
     {
         $profiles = [];
 
-        if ($this->relationLoaded('simpleUser') && $this->simpleUser) {
-            $profiles['simple_user'] = $this->simpleUser;
-        }
+        foreach (UserProfiles::all() as $type => $definition) {
+            $relation = $definition['relation'];
 
-        if ($this->relationLoaded('professionalUser') && $this->professionalUser) {
-            $profiles['professional_user'] = $this->professionalUser;
-        }
-
-        if ($this->relationLoaded('companyUser') && $this->companyUser) {
-            $profiles['company_user'] = $this->companyUser;
+            if ($this->relationLoaded($relation) && $this->{$relation}) {
+                $profiles[$definition['response_key']] = $this->{$relation};
+            }
         }
 
         return !empty($profiles) ? $profiles : null;
@@ -118,14 +114,19 @@ class User extends Authenticatable implements JWTSubject
         return auth()->payload()->get('login_as');
     }
 
+    public function isLoggedAsProfile(string $profileType): bool
+    {
+        return $this->loggedAs() === $profileType;
+    }
+
     public function isLoggedAsProfessional(): bool
     {
-        return $this->loggedAs() === self::TYPE_PROFESSIONAL;
+        return $this->isLoggedAsProfile(self::TYPE_PROFESSIONAL);
     }
 
     public function isLoggedAsSimple(): bool
     {
-        return $this->loggedAs() === self::TYPE_SIMPLE;
+        return $this->isLoggedAsProfile(self::TYPE_SIMPLE);
     }
 
 

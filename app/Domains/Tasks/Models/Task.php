@@ -45,6 +45,23 @@ class Task extends Model
         return $this->hasMany(TaskParticipant::class);
     }
 
+    public static function listRelations(): array
+    {
+        return array_merge(
+            [
+                'subcategory',
+                'beneficiary',
+                'participants',
+            ],
+            TaskParticipant::profileEagerLoads('participants.user')
+        );
+    }
+
+    public function scopeWithListRelations(Builder $query): Builder
+    {
+        return $query->with(self::listRelations());
+    }
+
     public function owners()
     {
         return $this->belongsToMany(
