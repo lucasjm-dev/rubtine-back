@@ -12,5 +12,6 @@ Route::prefix('v1')->group(function () {
     require __DIR__ . '/api/beneficiaries.php';
     require __DIR__ . '/api/tasks.php';
     require __DIR__ . '/api/taskParticipants.php';
+    require __DIR__ . '/api/taskEvents.php';
     require __DIR__ . '/api/categories.php';
 });
