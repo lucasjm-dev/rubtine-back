@@ -6,12 +6,26 @@ class ApiResponse
 {
     public static function success($data = null, string $message = 'OK', int $status = 200)
     {
-        return response()->json([
+        $responseData = [
             'success' => true,
             'message' => $message,
             'data'    => $data,
             'errors'  => null,
-        ], $status);
+        ];
+
+        if ($data instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator) {
+            $responseData['data'] = $data->items();
+            $responseData['meta'] = [
+                'current_page' => $data->currentPage(),
+                'last_page'    => $data->lastPage(),
+                'per_page'     => $data->perPage(),
+                'total'        => $data->total(),
+                'from'         => $data->firstItem(),
+                'to'           => $data->lastItem(),
+            ];
+        }
+
+        return response()->json($responseData, $status);
     }
 
     public static function error(string $message = 'Error', $errors = null, int $status = 400)

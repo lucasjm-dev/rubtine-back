@@ -35,12 +35,15 @@ class TaskService
             $query->whereStatus($filters['status']);
         }
 
-        return $this->paginator->paginate(
+
+
+        $tasks = $this->paginator->paginate(
             $query,
             $filters,
             ['id', 'created_at', 'updated_at', 'title', 'status'],
             ['title', 'description', 'status']
         );
+        return ApiResponse::success($tasks);
     }
 
     public function paginateAssigned(array $filters)
@@ -56,12 +59,13 @@ class TaskService
             $query->whereStatus($filters['status']);
         }
 
-        return $this->paginator->paginate(
+        $tasks = $this->paginator->paginate(
             $query,
             $filters,
             ['id', 'created_at', 'updated_at', 'title', 'status'],
             ['title', 'description']
         );
+        return ApiResponse::success($tasks);
     }
 
     public function paginateForProfessionalSubcategory(array $filters)
@@ -77,12 +81,13 @@ class TaskService
             $query->whereStatus($filters['status']);
         }
 
-        return $this->paginator->paginate(
+        $tasks = $this->paginator->paginate(
             $query,
             $filters,
             ['id', 'created_at', 'updated_at', 'title', 'status'],
             ['title', 'description']
         );
+        return ApiResponse::success($tasks);
     }
 
 

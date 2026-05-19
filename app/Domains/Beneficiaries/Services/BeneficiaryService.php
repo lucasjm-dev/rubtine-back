@@ -24,12 +24,14 @@ class BeneficiaryService
 
         $query = Beneficiary::query()->accessibleToUser($user);
 
-        return $this->paginator->paginate(
+        $paginated = $this->paginator->paginate(
             $query,
             $filters,
             ['id', 'created_at', 'updated_at', 'name', 'last_name', 'phone', 'email'],
             ['name', 'last_name', 'phone', 'email']
         );
+
+        return ApiResponse::success($paginated);
     }
 
     public function create(array $data)
