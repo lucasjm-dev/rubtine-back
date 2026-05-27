@@ -26,9 +26,9 @@ class UpdateTaskRequest extends FormRequest
     public function rules()
     {
         return [
-            'subcategory_id' => 'sometimes|integer|exists:subcategories,id',
+            'subcategory_id' => 'sometimes|nullable|integer|exists:subcategories,id',
             'beneficiary_id' => 'sometimes|nullable|integer|exists:beneficiaries,id',
-            'title' => 'sometimes|string|max:64',
+            'title' => 'required|string|max:64',
             'description' => 'sometimes|nullable|string|max:255',
             'public' => 'sometimes|boolean',
             'status' => [

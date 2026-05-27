@@ -28,7 +28,8 @@ class TaskEventService
 
         $query = $task->events()
             ->with('notifications')
-            ->orderBy('scheduled_at');
+            ->orderBy('scheduled_at')
+            ->getQuery();
 
         $events = $this->paginator->paginate($query, $data);
 

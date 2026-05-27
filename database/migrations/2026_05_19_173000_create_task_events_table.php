@@ -2,6 +2,7 @@
 
 use App\Domains\Tasks\Enums\EventNotificationStatus;
 use App\Domains\Tasks\Enums\EventNotificationType;
+use App\Domains\Tasks\Enums\ScheduleRecurrenceType;
 use App\Domains\Tasks\Enums\TaskEventStatus;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -16,6 +17,28 @@ class CreateTaskEventsTable extends Migration
      */
     public function up()
     {
+        Schema::create('task_event_schedules', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('task_id')
+                ->constrained('tasks')
+                ->onDelete('cascade');
+            $table->foreignId('user_id')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
+            $table->string('recurrence_type', 32);
+            $table->json('days_of_week')->nullable();
+            $table->unsignedTinyInteger('day_of_month')->nullable();
+            $table->time('time_start');
+            $table->time('time_end')->nullable();
+            $table->string('description', 512)->nullable();
+            $table->date('starts_at');
+            $table->date('ends_at')->nullable();
+            $table->date('horizon_generated_until');
+            $table->boolean('active')->default(true);
+            $table->timestamps();
+        });
+
         Schema::create('task_events', function (Blueprint $table) {
             $table->id();
             $table->foreignId('task_id')
@@ -24,6 +47,10 @@ class CreateTaskEventsTable extends Migration
             $table->foreignId('user_id')
                 ->nullable()
                 ->constrained('users')
+                ->nullOnDelete();
+            $table->foreignId('task_event_schedule_id')
+                ->nullable()
+                ->constrained('task_event_schedules')
                 ->nullOnDelete();
             $table->string('description', 512)->nullable();
             $table->string('status', 32)->default(TaskEventStatus::PENDING);
@@ -54,5 +81,6 @@ class CreateTaskEventsTable extends Migration
     {
         Schema::dropIfExists('event_notifications');
         Schema::dropIfExists('task_events');
+        Schema::dropIfExists('task_event_schedules');
     }
 }

@@ -50,6 +50,11 @@ class Task extends Model
         return $this->hasMany(TaskEvent::class);
     }
 
+    public function eventSchedules()
+    {
+        return $this->hasMany(TaskEventSchedule::class);
+    }
+
     public static function listRelations(): array
     {
         return array_merge(

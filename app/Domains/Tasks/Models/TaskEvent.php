@@ -14,6 +14,7 @@ class TaskEvent extends Model
     protected $fillable = [
         'task_id',
         'user_id',
+        'task_event_schedule_id',
         'description',
         'status',
         'scheduled_at',
@@ -38,5 +39,10 @@ class TaskEvent extends Model
     public function notifications(): HasMany
     {
         return $this->hasMany(EventNotification::class);
+    }
+
+    public function schedule(): BelongsTo
+    {
+        return $this->belongsTo(TaskEventSchedule::class, 'task_event_schedule_id');
     }
 }

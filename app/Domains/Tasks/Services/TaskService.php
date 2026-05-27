@@ -35,8 +35,6 @@ class TaskService
             $query->whereStatus($filters['status']);
         }
 
-
-
         $tasks = $this->paginator->paginate(
             $query,
             $filters,
