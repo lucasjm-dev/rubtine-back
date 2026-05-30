@@ -56,6 +56,7 @@ class CreateTaskEventsTable extends Migration
             $table->string('status', 32)->default(TaskEventStatus::PENDING);
             $table->dateTime('scheduled_at');
             $table->dateTime('ends_at')->nullable();
+            $table->boolean('is_manually_edited')->default(false);
             $table->timestamps();
         });
 

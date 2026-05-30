@@ -57,6 +57,7 @@ class TaskEventSchedule extends Model
     public function scopeNeedsExtension($query, $thresholdDate)
     {
         return $query->active()
+            ->where('recurrence_type', '!=', \App\Domains\Tasks\Enums\ScheduleRecurrenceType::ONCE)
             ->where('horizon_generated_until', '<=', $thresholdDate)
             ->where(function ($q) use ($thresholdDate) {
                 $q->whereNull('ends_at')

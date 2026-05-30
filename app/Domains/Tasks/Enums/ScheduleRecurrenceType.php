@@ -5,6 +5,7 @@ namespace App\Domains\Tasks\Enums;
 final class ScheduleRecurrenceType
 {
 
+    public const ONCE = 'ONCE';
     public const DAILY = 'DAILY';
     public const WEEKLY = 'WEEKLY';
     public const MONTHLY = 'MONTHLY';
@@ -12,6 +13,7 @@ final class ScheduleRecurrenceType
     public static function values(): array
     {
         return [
+            self::ONCE,
             self::DAILY,
             self::WEEKLY,
             self::MONTHLY,

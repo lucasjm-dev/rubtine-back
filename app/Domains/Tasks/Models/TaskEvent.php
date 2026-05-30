@@ -19,11 +19,13 @@ class TaskEvent extends Model
         'status',
         'scheduled_at',
         'ends_at',
+        'is_manually_edited',
     ];
 
     protected $casts = [
         'scheduled_at' => 'datetime',
         'ends_at' => 'datetime',
+        'is_manually_edited' => 'boolean',
     ];
 
     public function task(): BelongsTo

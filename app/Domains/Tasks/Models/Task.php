@@ -62,6 +62,7 @@ class Task extends Model
                 'subcategory',
                 'beneficiary',
                 'participants',
+                'eventSchedules'
             ],
             TaskParticipant::profileEagerLoads('participants.user')
         );
