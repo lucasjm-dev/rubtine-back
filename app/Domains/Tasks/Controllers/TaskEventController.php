@@ -24,6 +24,11 @@ class TaskEventController extends Controller
         return $this->service->paginate($request->validated(), $task);
     }
 
+    public function getAll(TaskEventIndexRequest $request)
+    {
+        return $this->service->getAll($request->validated());
+    }
+
     public function create(CreateTaskEventRequest $request, Task $task)
     {
         return $this->service->create($task, $request->validated());

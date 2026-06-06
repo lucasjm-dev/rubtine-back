@@ -12,3 +12,7 @@ Route::prefix('tasks/{task}/events')->where(['task' => '[0-9]{1,19}', 'event' =>
         Route::delete('/{event}', [TaskEventController::class, 'delete']);
     });
 });
+
+Route::middleware(['auth:api'])->group(function () {
+    Route::get('/tasks/events/all', [TaskEventController::class, 'getAll']);
+});

@@ -2,10 +2,12 @@
 
 namespace App\Domains\Tasks\Models;
 
+use App\Domains\Tasks\Enums\TaskParticipantTaskRole;
 use App\Domains\Users\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Builder;
 
 class TaskEvent extends Model
 {
@@ -46,5 +48,13 @@ class TaskEvent extends Model
     public function schedule(): BelongsTo
     {
         return $this->belongsTo(TaskEventSchedule::class, 'task_event_schedule_id');
+    }
+
+    public function scopeOwnedByUser(Builder $query, User $user): Builder
+    {
+        return $query->whereHas('task.participants', function ($q) use ($user) {
+            $q->where('task_participants.user_id', $user->id)
+                ->where('task_participants.task_role', TaskParticipantTaskRole::OWNER);
+        });
     }
 }

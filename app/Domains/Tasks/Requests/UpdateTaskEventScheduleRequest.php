@@ -15,7 +15,6 @@ class UpdateTaskEventScheduleRequest extends FormRequest
     public function rules(): array
     {
         $recurrenceType = $this->input('recurrence_type') ?? ($this->route('schedule') ? $this->route('schedule')->recurrence_type : null);
-
         $rules = [
             'recurrence_type' => ['sometimes', 'string', 'in:' . implode(',', ScheduleRecurrenceType::values())],
             'days_of_week' => ['nullable', 'array'],
@@ -37,13 +36,12 @@ class UpdateTaskEventScheduleRequest extends FormRequest
             $rules['days_of_week'] = ['sometimes', 'array', 'min:1'];
             $rules['day_of_month'] = ['nullable', 'prohibited'];
         } elseif ($recurrenceType === ScheduleRecurrenceType::MONTHLY) {
-            $rules['day_of_month'] = ['sometimes', 'integer', 'between:1,31'];
+            $rules['day_of_month'] = ['sometimes', 'nullable', 'integer', 'between:1,31'];
             $rules['days_of_week'] = ['nullable', 'prohibited'];
         } elseif ($recurrenceType === ScheduleRecurrenceType::DAILY) {
             $rules['days_of_week'] = ['nullable', 'prohibited'];
             $rules['day_of_month'] = ['nullable', 'prohibited'];
         }
-
         return $rules;
     }
 }

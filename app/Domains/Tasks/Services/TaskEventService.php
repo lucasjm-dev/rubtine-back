@@ -36,6 +36,21 @@ class TaskEventService
         return ApiResponse::success($events);
     }
 
+    public function getAll(array $data)
+    {
+        /** @var User $user */
+        $user = auth()->user();
+
+        $query = TaskEvent::query()
+            ->ownedByUser($user)
+            ->with('task', 'task.beneficiary')
+            ->orderBy('scheduled_at');
+
+        $events = $this->paginator->paginate($query, $data);
+
+        return ApiResponse::success($events);
+    }
+
     public function show(Task $task, TaskEvent $event)
     {
         /** @var User $user */
