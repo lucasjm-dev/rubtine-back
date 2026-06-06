@@ -57,6 +57,7 @@ class CreateTaskEventsTable extends Migration
             $table->dateTime('scheduled_at');
             $table->dateTime('ends_at')->nullable();
             $table->boolean('is_manually_edited')->default(false);
+            $table->string('action_token', 48)->nullable();
             $table->timestamps();
         });
 

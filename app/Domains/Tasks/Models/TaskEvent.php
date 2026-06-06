@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Str;
 
 class TaskEvent extends Model
 {
@@ -22,6 +23,11 @@ class TaskEvent extends Model
         'scheduled_at',
         'ends_at',
         'is_manually_edited',
+        'action_token',
+    ];
+
+    protected $hidden = [
+        'action_token',
     ];
 
     protected $casts = [
@@ -29,6 +35,17 @@ class TaskEvent extends Model
         'ends_at' => 'datetime',
         'is_manually_edited' => 'boolean',
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function (TaskEvent $event) {
+            if (empty($event->action_token)) {
+                $event->action_token = Str::random(48);
+            }
+        });
+    }
 
     public function task(): BelongsTo
     {

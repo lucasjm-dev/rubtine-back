@@ -8,6 +8,7 @@ final class EventNotificationType
     public const PUSH = 'PUSH';
     public const EMAIL = 'EMAIL';
     public const SMS = 'SMS';
+    public const WHATSAPP = 'WHATSAPP';
 
     public static function values(): array
     {
@@ -15,6 +16,7 @@ final class EventNotificationType
             self::PUSH,
             self::EMAIL,
             self::SMS,
+            self::WHATSAPP,
         ];
     }
 
