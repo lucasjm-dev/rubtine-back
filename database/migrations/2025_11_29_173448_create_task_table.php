@@ -28,8 +28,6 @@ class CreateTaskTable extends Migration
             $table->string('description', 256)->nullable();
             $table->string('status', 32)->default('DRAFT');
             $table->boolean('public')->default(false);
-            $table->integer('reminder_minutes_before')->nullable();
-
 
             $table->timestamps();
         });

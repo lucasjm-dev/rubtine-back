@@ -19,6 +19,7 @@ class CreateTaskEventRequest extends FormRequest
             'status' => ['sometimes', 'string', 'in:' . implode(',', TaskEventStatus::values())],
             'scheduled_at' => ['required', 'date'],
             'ends_at' => ['nullable', 'date', 'after_or_equal:scheduled_at'],
+            'reminder_minutes_before' => ['nullable', 'integer', 'min:0'],
         ];
     }
 }

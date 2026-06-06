@@ -24,6 +24,7 @@ class TaskEventSchedule extends Model
         'ends_at',
         'horizon_generated_until',
         'active',
+        'reminder_minutes_before',
     ];
 
     protected $casts = [

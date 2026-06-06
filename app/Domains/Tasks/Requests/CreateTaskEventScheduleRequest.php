@@ -24,6 +24,7 @@ class CreateTaskEventScheduleRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:512'],
             'starts_at' => ['required', 'date', 'after_or_equal:today'],
             'ends_at' => ['nullable', 'date', 'after_or_equal:starts_at', 'prohibited_if:recurrence_type,ONCE'],
+            'reminder_minutes_before' => ['nullable', 'integer', 'min:0'],
         ];
     }
 

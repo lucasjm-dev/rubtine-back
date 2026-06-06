@@ -116,6 +116,7 @@ class TaskEventScheduleService
         return DB::transaction(function () use ($schedule, $data) {
             $oldValues = $this->snapshotRelevantFields($schedule);
             $oldDescription = $schedule->description;
+            $oldReminderMinutes = $schedule->reminder_minutes_before;
 
             $schedule->update($data);
             $schedule->refresh();
@@ -132,6 +133,7 @@ class TaskEventScheduleService
             $hasStructuralChange = $this->hasFieldsInSet($changedFields, self::STRUCTURAL_FIELDS);
             $hasTimeChange = $this->hasFieldsInSet($changedFields, self::TIME_FIELDS);
             $hasDescriptionChange = in_array('description', $changedFields);
+            $hasReminderChange = in_array('reminder_minutes_before', $changedFields);
 
             if ($hasStructuralChange) {
                 $this->handleStructuralChange($schedule, $futureAutoEvents, $now);
@@ -141,6 +143,10 @@ class TaskEventScheduleService
 
             if ($hasDescriptionChange && !$hasStructuralChange) {
                 $this->propagateDescription($schedule, $oldDescription, $now);
+            }
+
+            if ($hasReminderChange && !$hasStructuralChange) {
+                $this->propagateReminderMinutes($schedule, $oldReminderMinutes, $now);
             }
 
             return ApiResponse::success($schedule->fresh('events'));
@@ -211,6 +217,7 @@ class TaskEventScheduleService
                 'scheduled_at' => $scheduledAt,
                 'ends_at' => $endsAt,
                 'is_manually_edited' => false,
+                'reminder_minutes_before' => $schedule->reminder_minutes_before,
             ]);
         }
     }
@@ -292,11 +299,28 @@ class TaskEventScheduleService
     }
 
     /**
+     * Propagate reminder_minutes_before change to future PENDING auto-generated events
+     * that still have the old value (not manually edited).
+     */
+    private function propagateReminderMinutes(
+        TaskEventSchedule $schedule,
+        ?int $oldReminderMinutes,
+        Carbon $now
+    ): void {
+        $schedule->events()
+            ->where('status', TaskEventStatus::PENDING)
+            ->where('scheduled_at', '>', $now)
+            ->where('is_manually_edited', false)
+            ->where('reminder_minutes_before', $oldReminderMinutes)
+            ->update(['reminder_minutes_before' => $schedule->reminder_minutes_before]);
+    }
+
+    /**
      * Take a snapshot of the schedule's relevant fields before update.
      */
     private function snapshotRelevantFields(TaskEventSchedule $schedule): array
     {
-        $fields = array_merge(self::STRUCTURAL_FIELDS, self::TIME_FIELDS, ['description']);
+        $fields = array_merge(self::STRUCTURAL_FIELDS, self::TIME_FIELDS, ['description', 'reminder_minutes_before']);
         $snapshot = [];
         foreach ($fields as $field) {
             $value = $schedule->getAttribute($field);

@@ -26,6 +26,7 @@ class UpdateTaskEventScheduleRequest extends FormRequest
             'starts_at' => ['sometimes', 'date'],
             'ends_at' => ['nullable', 'date', 'after_or_equal:starts_at'],
             'active' => ['sometimes', 'boolean'],
+            'reminder_minutes_before' => ['nullable', 'integer', 'min:0'],
         ];
 
         if ($recurrenceType === ScheduleRecurrenceType::ONCE) {

@@ -23,6 +23,7 @@ class TaskEvent extends Model
         'scheduled_at',
         'ends_at',
         'is_manually_edited',
+        'reminder_minutes_before',
         'action_token',
     ];
 

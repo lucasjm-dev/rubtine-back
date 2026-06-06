@@ -36,6 +36,7 @@ class CreateTaskEventsTable extends Migration
             $table->date('ends_at')->nullable();
             $table->date('horizon_generated_until');
             $table->boolean('active')->default(true);
+            $table->unsignedInteger('reminder_minutes_before')->nullable();
             $table->timestamps();
         });
 
@@ -57,6 +58,7 @@ class CreateTaskEventsTable extends Migration
             $table->dateTime('scheduled_at');
             $table->dateTime('ends_at')->nullable();
             $table->boolean('is_manually_edited')->default(false);
+            $table->unsignedInteger('reminder_minutes_before')->nullable();
             $table->string('action_token', 48)->nullable();
             $table->timestamps();
         });
