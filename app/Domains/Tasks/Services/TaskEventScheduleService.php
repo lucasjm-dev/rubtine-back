@@ -80,6 +80,12 @@ class TaskEventScheduleService
 
         $task = Task::query()->ownedByUser($user)->findOrFail($task->id);
 
+        // Only one schedule is allowed per task: if one already exists, update it instead.
+        $existingSchedule = $task->eventSchedules()->first();
+        if ($existingSchedule) {
+            return $this->update($task, $existingSchedule, $data);
+        }
+
         return DB::transaction(function () use ($task, $user, $data) {
             $startsAt = Carbon::parse($data['starts_at']);
 

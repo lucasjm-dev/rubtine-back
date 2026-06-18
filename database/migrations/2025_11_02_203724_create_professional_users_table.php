@@ -17,7 +17,7 @@ class CreateProfessionalUsersTable extends Migration
             $table->id();
 
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('subcategory_id')->constrained('subcategories')->onDelete('restrict');
+            $table->foreignId('subcategory_id')->nullable()->constrained('subcategories')->onDelete('restrict');
 
             $table->date('birth_date')->nullable();
             $table->string('about_me', 256)->nullable();

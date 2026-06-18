@@ -27,7 +27,7 @@ class CreateProfessionalUserRequest extends FormRequest
         return [
             'birth_date' => 'nullable|date_format:Y-m-d|before:-13 years|after:-120 years',
             'about_me' => 'nullable|string|max:255',
-            'subcategory_id' => 'required|integer|exists:subcategories,id'
+            'subcategory_id' => 'nullable|integer|exists:subcategories,id',
             // 'profile_photo' => 'nullable|string|max:255',
         ];
     }

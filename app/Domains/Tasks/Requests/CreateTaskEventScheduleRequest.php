@@ -27,23 +27,4 @@ class CreateTaskEventScheduleRequest extends FormRequest
             'reminder_minutes_before' => ['nullable', 'integer', 'min:0'],
         ];
     }
-
-    public function withValidator($validator)
-    {
-        $validator->after(function ($validator) {
-            $startsAt = $this->input('starts_at');
-            $timeStart = $this->input('time_start');
-
-            if ($startsAt && $timeStart) {
-                try {
-                    $startDateTime = \Carbon\Carbon::parse("{$startsAt} {$timeStart}");
-                    if ($startDateTime->isPast()) {
-                        $validator->errors()->add('time_start', __('The start date and time must be in the future.'));
-                    }
-                } catch (\Exception $e) {
-                    // Handled by other date/time validation rules
-                }
-            }
-        });
-    }
 }

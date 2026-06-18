@@ -112,6 +112,7 @@ class Handler extends ExceptionHandler
             ['exception' => $e->getMessage(), 'string' => $e->getTraceAsString()],
             500
         );
+        // return parent::render($request, $e);
     }
 
     /**
@@ -129,6 +130,14 @@ class Handler extends ExceptionHandler
             $errors[$field] = [];
             foreach ($rules as $rule => $parameters) {
                 $errors[$field][] = $this->mapRuleToErrorCode($rule, $parameters);
+            }
+        }
+
+        // Include manually-added errors (e.g. via withValidator()->errors()->add()),
+        // which do not appear in failed() since they are not rule-based.
+        foreach ($e->errors() as $field => $messages) {
+            if (! isset($errors[$field])) {
+                $errors[$field] = $messages;
             }
         }
 
