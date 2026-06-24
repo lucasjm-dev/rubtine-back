@@ -7,12 +7,13 @@ use App\Domains\Tasks\Enums\TaskParticipantProfile;
 use App\Domains\Tasks\Enums\TaskParticipantStatus;
 use App\Domains\Tasks\Enums\TaskParticipantTaskRole;
 use App\Domains\Tasks\Models\Task;
+use App\Traits\SerializesDatesInAppTimezone;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class ProfessionalUser extends Model
 {
-    use HasFactory;
+    use HasFactory, SerializesDatesInAppTimezone;
 
     protected $with = ['subcategory'];
 

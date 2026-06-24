@@ -2,12 +2,13 @@
 
 namespace App\Domains\Users\Models;
 
+use App\Traits\SerializesDatesInAppTimezone;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class SimpleUser extends Model
 {
-    use HasFactory;
+    use HasFactory, SerializesDatesInAppTimezone;
 
     protected $fillable = [
         'user_id',

@@ -43,7 +43,7 @@ class TaskEventService
 
         $query = TaskEvent::query()
             ->ownedByUser($user)
-            ->with('task', 'task.beneficiary', 'notifications')
+            ->with('task', 'task.beneficiary', 'notifications', 'task.eventSchedules')
             ->orderBy('scheduled_at');
 
         $events = $this->paginator->paginate($query, $data);

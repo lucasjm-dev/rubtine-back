@@ -16,6 +16,10 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         $schedule->command('events:extend-horizon')->daily();
+
+        $schedule->command('events:send-reminders')
+            ->everyMinute()
+            ->withoutOverlapping();
     }
 
     /**

@@ -3,12 +3,15 @@
 namespace App\Domains\Tasks\Models;
 
 use App\Domains\Users\Models\User;
+use App\Traits\SerializesDatesInAppTimezone;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class TaskEventSchedule extends Model
 {
+    use SerializesDatesInAppTimezone;
+
     protected $table = 'task_event_schedules';
 
     protected $fillable = [

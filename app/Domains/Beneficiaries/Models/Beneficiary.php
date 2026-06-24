@@ -4,13 +4,14 @@ namespace App\Domains\Beneficiaries\Models;
 
 use App\Domains\Tasks\Models\Task;
 use App\Domains\Users\Models\User;
+use App\Traits\SerializesDatesInAppTimezone;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Beneficiary extends Model
 {
-    use HasFactory;
+    use HasFactory, SerializesDatesInAppTimezone;
 
     protected $table = 'beneficiaries';
 

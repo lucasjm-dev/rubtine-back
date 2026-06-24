@@ -4,6 +4,7 @@ namespace App\Domains\Tasks\Models;
 
 use App\Domains\Tasks\Enums\TaskParticipantTaskRole;
 use App\Domains\Users\Models\User;
+use App\Traits\SerializesDatesInAppTimezone;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -12,6 +13,8 @@ use Illuminate\Support\Str;
 
 class TaskEvent extends Model
 {
+    use SerializesDatesInAppTimezone;
+
     protected $table = 'task_events';
 
     protected $fillable = [

@@ -8,13 +8,14 @@ use App\Domains\Users\Models\User;
 use App\Support\Users\ResolvesUserProfile;
 use App\Support\Users\UserProfileMerger;
 use App\Support\Users\UserProfiles;
+use App\Traits\SerializesDatesInAppTimezone;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class TaskParticipant extends Model
 {
-    use ResolvesUserProfile;
+    use ResolvesUserProfile, SerializesDatesInAppTimezone;
 
     protected $table = 'task_participants';
 

@@ -6,6 +6,7 @@ use App\Domains\Beneficiaries\Models\Beneficiary;
 use App\Domains\Tasks\Models\Task;
 use App\Domains\Tasks\Enums\TaskParticipantTaskRole;
 use App\Support\Users\UserProfiles;
+use App\Traits\SerializesDatesInAppTimezone;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Notifications\Notifiable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
@@ -13,7 +14,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class User extends Authenticatable implements JWTSubject
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, SerializesDatesInAppTimezone;
 
     const TYPE_SIMPLE = 'simpleUser';
     const TYPE_PROFESSIONAL = 'professionalUser';

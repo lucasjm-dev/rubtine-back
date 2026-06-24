@@ -9,13 +9,14 @@ use App\Domains\Tasks\Enums\TaskParticipantStatus;
 use App\Domains\Tasks\Enums\TaskParticipantTaskRole;
 use App\Domains\Users\Models\ProfessionalUser;
 use App\Domains\Users\Models\User;
+use App\Traits\SerializesDatesInAppTimezone;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Task extends Model
 {
-    use HasFactory;
+    use HasFactory, SerializesDatesInAppTimezone;
 
     protected $fillable = [
         'title',

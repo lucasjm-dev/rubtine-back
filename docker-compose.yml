@@ -1,0 +1,63 @@
+x-app: &app
+  build:
+    context: .
+    dockerfile: Dockerfile
+    args:
+      UID: ${UID:-1000}
+      GID: ${GID:-1000}
+  image: rubtine-app
+  volumes:
+    - .:/var/www/html
+  env_file:
+    - .env
+  # Esto pisa lo que tengas en .env solo para los contenedores.
+  environment:
+    DB_HOST: db
+    DB_PORT: 5432
+  depends_on:
+    - db
+
+services:
+  # PHP-FPM: corre la app (lo que nginx le pasa)
+  app:
+    <<: *app
+
+  # Nginx: sirve public/ y manda los .php a php-fpm
+  web:
+    image: nginx:alpine
+    ports:
+      - "8000:80"
+    volumes:
+      - .:/var/www/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+
+  # Scheduler: reemplaza al cron. Dispara events:send-reminders cada minuto.
+  scheduler:
+    <<: *app
+    command: php artisan schedule:work
+    restart: unless-stopped
+
+  # Worker: ejecuta los Jobs encolados (manda los WhatsApp).
+  # queue:listen recarga el código en cada Job (cómodo en dev).
+  worker:
+    <<: *app
+    command: php artisan queue:listen --tries=3
+    restart: unless-stopped
+
+  # PostgreSQL
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-rubtine}
+      POSTGRES_USER: ${DB_USERNAME:-postgress}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgress}
+    # Host 5433 → contenedor 5432, para no chocar con un Postgres local en 5432.
+    ports:
+      - "5433:5432"
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+
+volumes:
+  dbdata:

@@ -2,11 +2,14 @@
 
 namespace App\Domains\Tasks\Models;
 
+use App\Traits\SerializesDatesInAppTimezone;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class EventNotification extends Model
 {
+    use SerializesDatesInAppTimezone;
+
     protected $table = 'event_notifications';
 
     protected $fillable = [

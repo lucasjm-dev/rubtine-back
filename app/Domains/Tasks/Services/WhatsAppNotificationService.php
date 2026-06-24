@@ -4,6 +4,7 @@ namespace App\Domains\Tasks\Services;
 
 use App\Domains\Tasks\Enums\EventNotificationStatus;
 use App\Domains\Tasks\Enums\EventNotificationType;
+use App\Domains\Tasks\Enums\TaskEventStatus;
 use App\Domains\Tasks\Models\TaskEvent;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -68,20 +69,122 @@ class WhatsAppNotificationService
 
         $taskTitle   = $event->task->title ?? 'Tarea sin título';
         $scheduledAt = $event->scheduled_at->format('d/m/Y H:i');
-        $token       = $event->action_token;
 
-        /*
-        |--------------------------------------------------------------
-        | Payload para la API de WhatsApp Business Cloud
-        |--------------------------------------------------------------
-        |
-        | Usa un Message Template aprobado ("task_event_reminder").
-        | Los componentes del body referencian variables {{1}}, {{2}}, {{3}}.
-        | Los botones tipo URL usan un sufijo dinámico ({{1}}) que se
-        | concatena a la URL base configurada en el template.
-        |
-        */
-        $payload = [
+        // En local manda el template de prueba hello_world (pre-aprobado por
+        // Meta, sin variables ni botones y sin ventana de 24h). En cualquier
+        // otro ambiente usa el template real del recordatorio.
+        $payload = app()->environment('local')
+            ? $this->buildTestTemplatePayload($phone)
+            : $this->buildTemplatePayload($event, $phone, $userName, $taskTitle, $scheduledAt);
+
+        $url = "{$this->apiUrl}/{$this->phoneNumberId}/messages";
+
+        try {
+            $response = Http::withToken($this->accessToken)
+                ->timeout(15)
+                ->withOptions(['connect_timeout' => 10])
+                ->post($url, $payload);
+
+            if ($response->successful()) {
+                Log::info('WhatsApp notification sent', [
+                    'task_event_id' => $event->id,
+                    'phone'         => $phone,
+                    'wa_message_id' => $response->json('messages.0.id'),
+                ]);
+
+                $this->recordNotification($event, EventNotificationStatus::SENT);
+                $event->status = TaskEventStatus::TO_CONFIRM;
+                $event->save();
+
+                return true;
+            }
+
+            Log::error('WhatsApp notification failed', [
+                'task_event_id' => $event->id,
+                'status'        => $response->status(),
+                'body'          => $response->json(),
+            ]);
+
+            $this->recordNotification($event, EventNotificationStatus::FAILED);
+
+            return false;
+        } catch (\Throwable $e) {
+            Log::error('WhatsApp notification exception', [
+                'task_event_id' => $event->id,
+                'error'         => $e->getMessage(),
+            ]);
+
+            $this->recordNotification($event, EventNotificationStatus::FAILED);
+
+            return false;
+        }
+    }
+
+    /**
+     * Marca el resultado del envío en la notificación.
+     *
+     * Si ya existe una notificación WhatsApp en estado PENDING (la "reclamada"
+     * por el comando events:send-reminders), la actualiza. Si no existe ninguna
+     * (ej. al llamar a este servicio directamente), crea una nueva.
+     */
+    private function recordNotification(TaskEvent $event, string $status): void
+    {
+        $sentAt = $status === EventNotificationStatus::SENT ? now() : null;
+
+        $notification = $event->notifications()
+            ->where('type', EventNotificationType::WHATSAPP)
+            ->where('status', EventNotificationStatus::PENDING)
+            ->latest('id')
+            ->first();
+
+        if ($notification !== null) {
+            $notification->update([
+                'status'  => $status,
+                'sent_at' => $sentAt,
+            ]);
+
+            return;
+        }
+
+        $event->notifications()->create([
+            'type'    => EventNotificationType::WHATSAPP,
+            'status'  => $status,
+            'send_at' => now(),
+            'sent_at' => $sentAt,
+        ]);
+    }
+
+    /**
+     * Template de prueba pre-aprobado por Meta (hello_world).
+     *
+     * No lleva variables ni botones y, al ser template, no requiere la ventana
+     * de 24h: sirve para validar credenciales y entrega en local. El texto del
+     * mensaje es fijo ("Hello World"), no se puede personalizar.
+     */
+    private function buildTestTemplatePayload(string $phone): array
+    {
+        return [
+            'messaging_product' => 'whatsapp',
+            'to'                => $phone,
+            'type'              => 'template',
+            'template'          => [
+                'name'     => 'hello_world',
+                'language' => ['code' => 'en_US'],
+            ],
+        ];
+    }
+
+    /**
+     * Payload con Message Template aprobado ("task_event_reminder").
+     * Los componentes del body referencian {{1}}=nombre, {{2}}=tarea, {{3}}=fecha.
+     * Los botones tipo URL usan un sufijo dinámico concatenado a la URL base
+     * configurada en el template.
+     */
+    private function buildTemplatePayload(TaskEvent $event, string $phone, string $userName, string $taskTitle, string $scheduledAt): array
+    {
+        $token = $event->action_token;
+
+        return [
             'messaging_product' => 'whatsapp',
             'to'                => $phone,
             'type'              => 'template',
@@ -89,7 +192,6 @@ class WhatsAppNotificationService
                 'name'     => 'task_event_reminder',
                 'language' => ['code' => 'es'],
                 'components' => [
-                    // Body parameters: {{1}}=nombre, {{2}}=tarea, {{3}}=fecha
                     [
                         'type'       => 'body',
                         'parameters' => [
@@ -119,57 +221,5 @@ class WhatsAppNotificationService
                 ],
             ],
         ];
-
-        $url = "{$this->apiUrl}/{$this->phoneNumberId}/messages";
-
-        try {
-            $response = Http::withToken($this->accessToken)
-                ->post($url, $payload);
-
-            if ($response->successful()) {
-                Log::info('WhatsApp notification sent', [
-                    'task_event_id' => $event->id,
-                    'phone'         => $phone,
-                    'wa_message_id' => $response->json('messages.0.id'),
-                ]);
-
-                // Registrar la notificación enviada
-                $event->notifications()->create([
-                    'type'    => EventNotificationType::WHATSAPP,
-                    'status'  => EventNotificationStatus::SENT,
-                    'send_at' => now(),
-                    'sent_at' => now(),
-                ]);
-
-                return true;
-            }
-
-            Log::error('WhatsApp notification failed', [
-                'task_event_id' => $event->id,
-                'status'        => $response->status(),
-                'body'          => $response->json(),
-            ]);
-
-            $event->notifications()->create([
-                'type'    => EventNotificationType::WHATSAPP,
-                'status'  => EventNotificationStatus::FAILED,
-                'send_at' => now(),
-            ]);
-
-            return false;
-        } catch (\Throwable $e) {
-            Log::error('WhatsApp notification exception', [
-                'task_event_id' => $event->id,
-                'error'         => $e->getMessage(),
-            ]);
-
-            $event->notifications()->create([
-                'type'    => EventNotificationType::WHATSAPP,
-                'status'  => EventNotificationStatus::FAILED,
-                'send_at' => now(),
-            ]);
-
-            return false;
-        }
     }
 }
