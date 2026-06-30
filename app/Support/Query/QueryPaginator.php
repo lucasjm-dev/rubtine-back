@@ -33,7 +33,7 @@ class QueryPaginator
 
 
         return $query->paginate(
-            $filters['per_page'] ?? 10
+            $filters['per_page'] ?? 100
         );
     }
 }

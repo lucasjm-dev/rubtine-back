@@ -32,7 +32,7 @@ WORKDIR /var/www/html
 # --no-scripts evita que package:discover corra durante el build (Laravel lo
 # resuelve en runtime igual). En dev este vendor queda tapado por el bind mount.
 COPY . .
-RUN composer install --no-interaction --prefer-dist --no-scripts
+RUN composer install --no-interaction --prefer-dist --no-scripts --no-dev --optimize-autoloader
 
 # Laravel necesita escribir en storage/ y bootstrap/cache
 RUN chown -R www-data:www-data storage bootstrap/cache
