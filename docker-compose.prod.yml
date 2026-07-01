@@ -1,0 +1,68 @@
+# ── PRODUCCIÓN ──────────────────────────────────────────────────────────
+# Uso:  docker compose -f docker-compose.prod.yml up -d --build
+# (o dejá COMPOSE_FILE=docker-compose.prod.yml en el .env del server y corrés
+#  `docker compose up -d` a secas — ver nota al pie del chat).
+#
+# Diferencias con dev: sin bind mounts (el código va horneado en la imagen),
+# queue:work en vez de queue:listen, nginx con public/ copiado, Postgres
+# accesible solo por loopback y storage/ en volumen persistente.
+x-app: &app
+  build:
+    context: .
+    dockerfile: Dockerfile
+    args:
+      UID: ${UID:-1000}
+      GID: ${GID:-1000}
+  image: rubtine-app
+  env_file:
+    - .env
+  environment:
+    DB_HOST: db
+    DB_PORT: 5432
+  # storage/ persistente y compartido entre app/scheduler/worker (logs, cache).
+  volumes:
+    - storage:/var/www/html/storage
+  depends_on:
+    - db
+  restart: unless-stopped
+
+services:
+  app:
+    <<: *app
+
+  # Nginx con public/ copiado dentro de la imagen (no hay bind mount en prod).
+  web:
+    build:
+      context: .
+      dockerfile: docker/nginx/Dockerfile
+    image: rubtine-web
+    ports:
+      - "127.0.0.1:8000:80"
+    depends_on:
+      - app
+    restart: unless-stopped
+
+  scheduler:
+    <<: *app
+    command: php artisan schedule:work
+
+  worker:
+    <<: *app
+    command: php artisan queue:work --tries=3
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-rubtine}
+      POSTGRES_USER: ${DB_USERNAME:-postgress}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgress}
+    # Solo loopback: lo alcanza el túnel SSH de Navicat, no internet.
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  dbdata:
+  storage:
