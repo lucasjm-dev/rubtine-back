@@ -10,9 +10,13 @@ class TrustProxies extends Middleware
     /**
      * The trusted proxies for this application.
      *
+     * '*' porque la app solo es alcanzable a través de caddy → nginx dentro
+     * de la red de Docker (el puerto de nginx queda en loopback); sin esto
+     * Laravel ignora X-Forwarded-Proto y genera URLs http detrás del proxy.
+     *
      * @var array<int, string>|string|null
      */
-    protected $proxies;
+    protected $proxies = '*';
 
     /**
      * The headers that should be used to detect proxies.
