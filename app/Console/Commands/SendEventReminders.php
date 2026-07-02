@@ -30,7 +30,7 @@ class SendEventReminders extends Command
         logger()->info('now', [$now]);
         $events = TaskEvent::query()
             ->whereNotNull('reminder_minutes_before')
-            ->whereNotIn('status', [TaskEventStatus::CANCELLED, TaskEventStatus::COMPLETED])
+            ->where('status', TaskEventStatus::PENDING)
             ->where('scheduled_at', '>=', $now)
             ->whereRaw("scheduled_at - (reminder_minutes_before * interval '1 minute') <= ?", [$now])
             // No mandamos recordatorios "tardíos" (catch-up). El aviso solo es
