@@ -31,10 +31,14 @@ return [
     ],
 
     'whatsapp' => [
-        'api_url'          => env('WHATSAPP_API_URL', 'https://graph.facebook.com/v21.0'),
-        'phone_number_id'  => env('WHATSAPP_PHONE_NUMBER_ID', ''),
-        'access_token'     => env('WHATSAPP_ACCESS_TOKEN', ''),
-        'action_base_url'  => env('WHATSAPP_ACTION_BASE_URL', ''),
+        'api_url'              => env('WHATSAPP_API_URL', 'https://graph.facebook.com/v21.0'),
+        'phone_number_id'      => env('WHATSAPP_PHONE_NUMBER_ID', ''),
+        'access_token'         => env('WHATSAPP_ACCESS_TOKEN', ''),
+        // Código de idioma exacto del template aprobado en Meta
+        // ("Español (ECU)" → es_EC). Si Meta devuelve el error 132001
+        // (template not found), revisar el código en Business Suite.
+        'template_language'    => env('WHATSAPP_TEMPLATE_LANGUAGE', 'es_EC'),
+        'webhook_verify_token' => env('WHATSAPP_WEBHOOK_VERIFY_TOKEN', ''),
     ],
 
 ];

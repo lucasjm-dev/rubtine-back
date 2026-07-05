@@ -1,22 +1,21 @@
 <?php
 
-use App\Domains\Tasks\Controllers\WhatsAppActionController;
+use App\Domains\Tasks\Controllers\WhatsAppWebhookController;
 use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| WhatsApp Action Routes (public — no auth required)
+| WhatsApp Routes (public — no auth required)
 |--------------------------------------------------------------------------
 |
-| These endpoints are hit when a user taps a button in a WhatsApp
-| notification message. Authentication is handled by the unique,
-| unguessable action_token embedded in the URL.
+| Webhook: Meta verifies the callback URL with GET and delivers incoming
+| messages (including template quick reply button taps) with POST. The GET
+| is authenticated by the verify token; button actions are authenticated
+| by the unguessable action_token inside the button payload.
+|
+| Action routes: legacy URL-button endpoints, kept as a manual fallback.
 |
 */
 
-Route::prefix('whatsapp/actions/{token}')
-    ->where(['token' => '[A-Za-z0-9]{48}'])
-    ->group(function () {
-        Route::post('/confirm', [WhatsAppActionController::class, 'confirm']);
-        Route::post('/cancel', [WhatsAppActionController::class, 'cancel']);
-    });
+Route::get('/whatsapp/webhook', [WhatsAppWebhookController::class, 'verify']);
+Route::post('/whatsapp/webhook', [WhatsAppWebhookController::class, 'handle']);

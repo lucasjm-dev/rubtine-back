@@ -24,28 +24,26 @@ use Illuminate\Support\Facades\Log;
  *     WHATSAPP_API_URL=https://graph.facebook.com/v21.0
  *     WHATSAPP_PHONE_NUMBER_ID=tu_phone_number_id
  *     WHATSAPP_ACCESS_TOKEN=tu_access_token_permanente
- *     WHATSAPP_ACTION_BASE_URL=https://tu-dominio.com/api/v1/whatsapp/actions
+ *     WHATSAPP_TEMPLATE_LANGUAGE=es_EC
+ *     WHATSAPP_WEBHOOK_VERIFY_TOKEN=un_token_secreto
  *
- * ── Template de ejemplo en Meta Business Suite ──────────────
+ * ── Template en Meta Business Suite ─────────────────────────
  *  Nombre: task_event_reminder
  *  Categoría: UTILITY
- *  Idioma: es
- *  Header: ninguno
+ *  Idioma: Español (ECU) → código es_EC
+ *  Variables: con nombre (patient_name, professional_name, event_date, event_hour)
  *  Body:
- *      Hola {{1}}, tenés una tarea pendiente:
- *      📋 *{{2}}*
- *      📅 {{3}}
- *      ¿Querés marcarla como completada o cancelarla?
- *  Footer: Rubtine
- *  Buttons (tipo: URL, con variable):
- *      1. ✅ Completar  → URL: {{1}}/complete    (tipo: URL dinámica)
- *      2. ❌ Cancelar   → URL: {{1}}/cancel       (tipo: URL dinámica)
+ *      📅 ¡Hola, {{patient_name}}! Te recordamos tu turno con
+ *      {{professional_name}} el día *{{event_date}} a las {{event_hour}}*.
+ *      ¿Confirmás tu asistencia?
+ *  Buttons (tipo: quick reply):
+ *      1. Confirmar
+ *      2. Cancelar
  *
- *  ⚠ Los botones tipo URL en templates de WhatsApp Business abren
- *    el navegador del usuario. El sufijo dinámico se concatena
- *    a una URL base que configurás en el template.
- *    URL base del template: https://tu-dominio.com/api/v1/whatsapp/actions/
- *    Sufijo variable ({{1}}): {action_token}/complete  o  {action_token}/cancel
+ *  ⚠ Los botones quick reply NO abren URLs: cuando el paciente toca uno,
+ *    Meta envía el payload del botón al webhook configurado en la app
+ *    (GET/POST /api/v1/whatsapp/webhook). El payload lleva la acción y el
+ *    action_token del evento: "confirm:{token}" o "cancel:{token}".
  * ─────────────────────────────────────────────────────────────
  */
 class WhatsAppNotificationService
@@ -53,29 +51,34 @@ class WhatsAppNotificationService
     private string $apiUrl;
     private string $phoneNumberId;
     private string $accessToken;
-    private string $actionBaseUrl;
+    private string $templateLanguage;
 
     public function __construct()
     {
-        $this->apiUrl        = config('services.whatsapp.api_url', 'https://graph.facebook.com/v21.0');
-        $this->phoneNumberId = config('services.whatsapp.phone_number_id', '');
-        $this->accessToken   = config('services.whatsapp.access_token', '');
-        $this->actionBaseUrl = config('services.whatsapp.action_base_url', '');
+        $this->apiUrl           = config('services.whatsapp.api_url', 'https://graph.facebook.com/v21.0');
+        $this->phoneNumberId    = config('services.whatsapp.phone_number_id', '');
+        $this->accessToken      = config('services.whatsapp.access_token', '');
+        $this->templateLanguage = config('services.whatsapp.template_language', 'es_EC');
     }
 
-    public function sendEventReminder(TaskEvent $event, string $phone, string $userName): bool
+    public function sendEventReminder(TaskEvent $event, string $phone, string $patientName): bool
     {
-        $event->loadMissing('task');
+        $event->loadMissing('task.assignedProfessionals.user');
 
-        $taskTitle   = $event->task->title ?? 'Tarea sin título';
-        $scheduledAt = $event->scheduled_at->format('d/m/Y H:i');
+        $professional     = $event->task ? $event->task->assignedProfessionals->first() : null;
+        $professionalName = $professional && $professional->user
+            ? $professional->user->full_name
+            : 'el profesional';
+
+        $eventDate = $event->scheduled_at->format('d/m/Y');
+        $eventHour = $event->scheduled_at->format('H:i');
 
         // En local manda el template de prueba hello_world (pre-aprobado por
         // Meta, sin variables ni botones y sin ventana de 24h). En cualquier
         // otro ambiente usa el template real del recordatorio.
         $payload = app()->environment('local')
             ? $this->buildTestTemplatePayload($phone)
-            : $this->buildTemplatePayload($event, $phone, $userName, $taskTitle, $scheduledAt);
+            : $this->buildTemplatePayload($event, $phone, $patientName, $professionalName, $eventDate, $eventHour);
 
         $url = "{$this->apiUrl}/{$this->phoneNumberId}/messages";
 
@@ -176,11 +179,13 @@ class WhatsAppNotificationService
 
     /**
      * Payload con Message Template aprobado ("task_event_reminder").
-     * Los componentes del body referencian {{1}}=nombre, {{2}}=tarea, {{3}}=fecha.
-     * Los botones tipo URL usan un sufijo dinámico concatenado a la URL base
-     * configurada en el template.
+     * El template usa variables con nombre: {{patient_name}},
+     * {{professional_name}}, {{event_date}} y {{event_hour}}.
+     * Los botones quick reply llevan un payload ("confirm:{token}" /
+     * "cancel:{token}") que Meta devuelve al webhook cuando el paciente
+     * toca el botón.
      */
-    private function buildTemplatePayload(TaskEvent $event, string $phone, string $userName, string $taskTitle, string $scheduledAt): array
+    private function buildTemplatePayload(TaskEvent $event, string $phone, string $patientName, string $professionalName, string $eventDate, string $eventHour): array
     {
         $token = $event->action_token;
 
@@ -190,36 +195,79 @@ class WhatsAppNotificationService
             'type'              => 'template',
             'template'          => [
                 'name'     => 'task_event_reminder',
-                'language' => ['code' => 'es'],
+                'language' => ['code' => $this->templateLanguage],
                 'components' => [
                     [
                         'type'       => 'body',
                         'parameters' => [
-                            ['type' => 'text', 'text' => $userName],
-                            ['type' => 'text', 'text' => $taskTitle],
-                            ['type' => 'text', 'text' => $scheduledAt],
+                            ['type' => 'text', 'parameter_name' => 'patient_name', 'text' => $patientName],
+                            ['type' => 'text', 'parameter_name' => 'professional_name', 'text' => $professionalName],
+                            ['type' => 'text', 'parameter_name' => 'event_date', 'text' => $eventDate],
+                            ['type' => 'text', 'parameter_name' => 'event_hour', 'text' => $eventHour],
                         ],
                     ],
-                    // Botón 0: "Completar" → URL base + {token}/complete
+                    // Botón 0: "Confirmar"
                     [
                         'type'       => 'button',
-                        'sub_type'   => 'url',
+                        'sub_type'   => 'quick_reply',
                         'index'      => '0',
                         'parameters' => [
-                            ['type' => 'text', 'text' => "{$token}/complete"],
+                            ['type' => 'payload', 'payload' => "confirm:{$token}"],
                         ],
                     ],
-                    // Botón 1: "Cancelar" → URL base + {token}/cancel
+                    // Botón 1: "Cancelar"
                     [
                         'type'       => 'button',
-                        'sub_type'   => 'url',
+                        'sub_type'   => 'quick_reply',
                         'index'      => '1',
                         'parameters' => [
-                            ['type' => 'text', 'text' => "{$token}/cancel"],
+                            ['type' => 'payload', 'payload' => "cancel:{$token}"],
                         ],
                     ],
                 ],
             ],
         ];
+    }
+
+    /**
+     * Mensaje de texto libre (fuera de template). Solo se puede enviar dentro
+     * de la ventana de 24h posterior al último mensaje del usuario; se usa
+     * para responder cuando el paciente toca un botón quick reply.
+     */
+    public function sendTextMessage(string $phone, string $text): bool
+    {
+        $url = "{$this->apiUrl}/{$this->phoneNumberId}/messages";
+
+        try {
+            $response = Http::withToken($this->accessToken)
+                ->timeout(15)
+                ->withOptions(['connect_timeout' => 10])
+                ->post($url, [
+                    'messaging_product' => 'whatsapp',
+                    'to'                => $phone,
+                    'type'              => 'text',
+                    'text'              => [
+                        'body'        => $text,
+                        'preview_url' => false,
+                    ],
+                ]);
+
+            if (!$response->successful()) {
+                Log::error('WhatsApp text message failed', [
+                    'phone'  => $phone,
+                    'status' => $response->status(),
+                    'body'   => $response->json(),
+                ]);
+            }
+
+            return $response->successful();
+        } catch (\Throwable $e) {
+            Log::error('WhatsApp text message exception', [
+                'phone' => $phone,
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
+        }
     }
 }
