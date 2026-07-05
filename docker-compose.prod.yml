@@ -60,12 +60,17 @@ services:
       - app
     restart: unless-stopped
 
+  # user www-data: sin él, artisan corre como root y crea logs/cache en el
+  # volumen storage/ que después PHP-FPM (www-data) no puede escribir → 500
+  # en cualquier request que loguee (ej. el webhook de WhatsApp).
   scheduler:
     <<: *app
+    user: www-data
     command: php artisan schedule:work
 
   worker:
     <<: *app
+    user: www-data
     command: php artisan queue:work --tries=3
 
   db:
