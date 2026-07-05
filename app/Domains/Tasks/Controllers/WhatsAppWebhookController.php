@@ -46,6 +46,19 @@ class WhatsAppWebhookController extends Controller
     {
         foreach ($request->input('entry', []) as $entry) {
             foreach ($entry['changes'] ?? [] as $change) {
+                // Estados de entrega de los mensajes que enviamos
+                // (sent → delivered → read, o failed con el motivo).
+                foreach ($change['value']['statuses'] ?? [] as $status) {
+                    $level = ($status['status'] ?? '') === 'failed' ? 'error' : 'info';
+
+                    Log::{$level}('WhatsApp message status', [
+                        'wa_message_id' => $status['id'] ?? null,
+                        'status'        => $status['status'] ?? null,
+                        'recipient'     => $status['recipient_id'] ?? null,
+                        'errors'        => $status['errors'] ?? null,
+                    ]);
+                }
+
                 $messages = $change['value']['messages'] ?? [];
 
                 foreach ($messages as $message) {
