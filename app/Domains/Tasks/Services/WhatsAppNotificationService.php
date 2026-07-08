@@ -137,31 +137,42 @@ class WhatsAppNotificationService
      */
     private function recordNotification(TaskEvent $event, string $status, ?string $waMessageId = null): void
     {
-        $sentAt = $status === EventNotificationStatus::SENT ? now() : null;
+        // Nunca propagar errores de esta contabilidad: para cuando se llama,
+        // el mensaje ya salió (o ya falló) en Meta, y una excepción acá haría
+        // que la cola reintente el job y le duplique el WhatsApp al paciente.
+        try {
+            $sentAt = $status === EventNotificationStatus::SENT ? now() : null;
 
-        $notification = $event->notifications()
-            ->where('type', EventNotificationType::WHATSAPP)
-            ->where('status', EventNotificationStatus::PENDING)
-            ->latest('id')
-            ->first();
+            $notification = $event->notifications()
+                ->where('type', EventNotificationType::WHATSAPP)
+                ->where('status', EventNotificationStatus::PENDING)
+                ->latest('id')
+                ->first();
 
-        if ($notification !== null) {
-            $notification->update([
+            if ($notification !== null) {
+                $notification->update([
+                    'status'        => $status,
+                    'sent_at'       => $sentAt,
+                    'wa_message_id' => $waMessageId,
+                ]);
+
+                return;
+            }
+
+            $event->notifications()->create([
+                'type'          => EventNotificationType::WHATSAPP,
                 'status'        => $status,
+                'send_at'       => now(),
                 'sent_at'       => $sentAt,
                 'wa_message_id' => $waMessageId,
             ]);
-
-            return;
+        } catch (\Throwable $e) {
+            Log::error('WhatsApp notification bookkeeping failed', [
+                'task_event_id' => $event->id,
+                'status'        => $status,
+                'error'         => $e->getMessage(),
+            ]);
         }
-
-        $event->notifications()->create([
-            'type'          => EventNotificationType::WHATSAPP,
-            'status'        => $status,
-            'send_at'       => now(),
-            'sent_at'       => $sentAt,
-            'wa_message_id' => $waMessageId,
-        ]);
     }
 
     /**
