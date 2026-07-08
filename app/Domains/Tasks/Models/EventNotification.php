@@ -18,6 +18,7 @@ class EventNotification extends Model
         'status',
         'send_at',
         'sent_at',
+        'wa_message_id',
     ];
 
     protected $casts = [

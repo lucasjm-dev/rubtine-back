@@ -63,10 +63,13 @@ class WhatsAppNotificationService
 
     public function sendEventReminder(TaskEvent $event, string $phone, string $patientName): bool
     {
-        $event->loadMissing('task.assignedProfessionals.user');
+        $event->loadMissing('task');
 
-        $professional     = $event->task ? $event->task->assignedProfessionals->first() : null;
-        $professionalName = $professional && $professional->user
+        $professional = $event->task
+            ? $event->task->acceptedProfessionalParticipants()->with('user')->first()
+            : null;
+
+        $professionalName = $professional && $professional->user && $professional->user->full_name
             ? $professional->user->full_name
             : 'el profesional';
 
@@ -89,13 +92,15 @@ class WhatsAppNotificationService
                 ->post($url, $payload);
 
             if ($response->successful()) {
+                $waMessageId = $response->json('messages.0.id');
+
                 Log::info('WhatsApp notification sent', [
                     'task_event_id' => $event->id,
                     'phone'         => $phone,
-                    'wa_message_id' => $response->json('messages.0.id'),
+                    'wa_message_id' => $waMessageId,
                 ]);
 
-                $this->recordNotification($event, EventNotificationStatus::SENT);
+                $this->recordNotification($event, EventNotificationStatus::SENT, $waMessageId);
                 $event->status = TaskEventStatus::TO_CONFIRM;
                 $event->save();
 
@@ -130,7 +135,7 @@ class WhatsAppNotificationService
      * por el comando events:send-reminders), la actualiza. Si no existe ninguna
      * (ej. al llamar a este servicio directamente), crea una nueva.
      */
-    private function recordNotification(TaskEvent $event, string $status): void
+    private function recordNotification(TaskEvent $event, string $status, ?string $waMessageId = null): void
     {
         $sentAt = $status === EventNotificationStatus::SENT ? now() : null;
 
@@ -142,18 +147,20 @@ class WhatsAppNotificationService
 
         if ($notification !== null) {
             $notification->update([
-                'status'  => $status,
-                'sent_at' => $sentAt,
+                'status'        => $status,
+                'sent_at'       => $sentAt,
+                'wa_message_id' => $waMessageId,
             ]);
 
             return;
         }
 
         $event->notifications()->create([
-            'type'    => EventNotificationType::WHATSAPP,
-            'status'  => $status,
-            'send_at' => now(),
-            'sent_at' => $sentAt,
+            'type'          => EventNotificationType::WHATSAPP,
+            'status'        => $status,
+            'send_at'       => now(),
+            'sent_at'       => $sentAt,
+            'wa_message_id' => $waMessageId,
         ]);
     }
 

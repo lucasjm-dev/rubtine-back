@@ -49,14 +49,14 @@ class WhatsAppWebhookController extends Controller
                 // Estados de entrega de los mensajes que enviamos
                 // (sent → delivered → read, o failed con el motivo).
                 foreach ($change['value']['statuses'] ?? [] as $status) {
-                    $level = ($status['status'] ?? '') === 'failed' ? 'error' : 'info';
-
-                    Log::{$level}('WhatsApp message status', [
-                        'wa_message_id' => $status['id'] ?? null,
-                        'status'        => $status['status'] ?? null,
-                        'recipient'     => $status['recipient_id'] ?? null,
-                        'errors'        => $status['errors'] ?? null,
-                    ]);
+                    try {
+                        $this->service->handleStatusUpdate($status);
+                    } catch (\Throwable $e) {
+                        Log::error('WhatsApp webhook: error processing status', [
+                            'error'  => $e->getMessage(),
+                            'status' => $status,
+                        ]);
+                    }
                 }
 
                 $messages = $change['value']['messages'] ?? [];

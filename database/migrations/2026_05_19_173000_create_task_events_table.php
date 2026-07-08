@@ -72,6 +72,9 @@ class CreateTaskEventsTable extends Migration
             $table->string('status', 32)->default(EventNotificationStatus::PENDING);
             $table->dateTime('send_at');
             $table->dateTime('sent_at')->nullable();
+            // ID del mensaje en WhatsApp (wamid): vincula la notificación con
+            // los estados de entrega que llegan por webhook (failed, delivered…).
+            $table->string('wa_message_id')->nullable()->index();
             $table->timestamps();
         });
     }

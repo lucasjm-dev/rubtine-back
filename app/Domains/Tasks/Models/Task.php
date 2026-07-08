@@ -109,6 +109,19 @@ class Task extends Model
             ->wherePivot('status', TaskParticipantStatus::ACCEPTED);
     }
 
+    /**
+     * Participantes con perfil profesional aceptados, sin filtrar por rol:
+     * cubre tanto al profesional que creó la tarea (OWNER) como al que se
+     * sumó a una tarea ajena (PARTICIPANT). Se prioriza al OWNER.
+     */
+    public function acceptedProfessionalParticipants()
+    {
+        return $this->participants()
+            ->professionals()
+            ->where('status', TaskParticipantStatus::ACCEPTED)
+            ->orderByRaw('CASE WHEN task_role = ? THEN 0 ELSE 1 END', [TaskParticipantTaskRole::OWNER]);
+    }
+
 
     public function scopeAssignedToProfessional(
         Builder $query,

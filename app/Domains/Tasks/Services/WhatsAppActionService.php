@@ -2,7 +2,9 @@
 
 namespace App\Domains\Tasks\Services;
 
+use App\Domains\Tasks\Enums\EventNotificationStatus;
 use App\Domains\Tasks\Enums\TaskEventStatus;
+use App\Domains\Tasks\Models\EventNotification;
 use App\Domains\Tasks\Models\TaskEvent;
 use Illuminate\Support\Facades\Log;
 
@@ -62,6 +64,40 @@ class WhatsAppActionService
         if (!empty($message['from'])) {
             $this->notifications->sendTextMessage($message['from'], $result['message']);
         }
+    }
+
+    /**
+     * Procesa un estado de entrega del webhook (sent → delivered → read, o
+     * failed). Si el mensaje falló después de haber sido aceptado por Meta,
+     * marca la notificación correspondiente (por wa_message_id) como FAILED
+     * para que en la interfaz no quede como enviada.
+     *
+     * Escalable: delivered/read llegan por acá con el mismo wa_message_id;
+     * si algún día se quieren persistir, es agregar el caso en este método.
+     */
+    public function handleStatusUpdate(array $status): void
+    {
+        $waMessageId = $status['id'] ?? null;
+        $state       = $status['status'] ?? null;
+
+        $level = $state === 'failed' ? 'error' : 'info';
+
+        Log::{$level}('WhatsApp message status', [
+            'wa_message_id' => $waMessageId,
+            'status'        => $state,
+            'recipient'     => $status['recipient_id'] ?? null,
+            'errors'        => $status['errors'] ?? null,
+        ]);
+
+        if ($state !== 'failed' || $waMessageId === null) {
+            return;
+        }
+
+        // Puede no existir: también llegan statuses de mensajes que no
+        // trackeamos (ej. las respuestas de texto tras el quick reply).
+        EventNotification::where('wa_message_id', $waMessageId)
+            ->where('status', EventNotificationStatus::SENT)
+            ->update(['status' => EventNotificationStatus::FAILED]);
     }
 
     /**
