@@ -27,16 +27,35 @@ use Illuminate\Support\Facades\Log;
  *     WHATSAPP_TEMPLATE_LANGUAGE=es_EC
  *     WHATSAPP_WEBHOOK_VERIFY_TOKEN=un_token_secreto
  *
- * ── Template en Meta Business Suite ─────────────────────────
- *  Nombre: task_event_reminder
- *  Categoría: UTILITY
- *  Idioma: Español (ECU) → código es_EC
- *  Variables: con nombre (patient_name, professional_name, event_date, event_hour)
- *  Body:
- *      📅 ¡Hola, {{patient_name}}! Te recordamos tu turno con
- *      {{professional_name}} el día *{{event_date}} a las {{event_hour}}*.
- *      ¿Confirmás tu asistencia?
- *  Buttons (tipo: quick reply):
+ * ── Templates en Meta Business Suite ────────────────────────
+ *  Hay dos templates de recordatorio; más adelante se elegirá cuál usar
+ *  según la preferencia del usuario. Por ahora se envía SIEMPRE
+ *  task_event_reminder_policy.
+ *
+ *  1) task_event_reminder
+ *     Categoría: UTILITY
+ *     Idioma: Español (ECU) → código es_EC
+ *     Variables: con nombre (patient_name, professional_name, event_date, event_hour)
+ *     Body:
+ *         📅 ¡Hola, {{patient_name}}! Te recordamos tu turno con
+ *         {{professional_name}} el día *{{event_date}} a las {{event_hour}}*.
+ *         ¿Confirmás tu asistencia?
+ *
+ *  2) task_event_reminder_policy (en uso actualmente)
+ *     Categoría: UTILITY
+ *     Idioma: Español (ECU) → código es_EC
+ *     Variables: con nombre (patient_name, professional_name, event_date,
+ *     event_hour, cancellation_notice, cancellation_fee)
+ *     Body:
+ *         📅 ¡Hola, {{patient_name}}! Te recordamos tu turno con
+ *         {{professional_name}} el día {{event_date}} a las {{event_hour}}.
+ *
+ *         Las cancelaciones deben avisarse con {{cancellation_notice}} de
+ *         anticipación; de lo contrario, se abona {{cancellation_fee}}.
+ *
+ *         ¿Confirmás tu asistencia?
+ *
+ *  Buttons (tipo: quick reply, en ambos):
  *      1. Confirmar
  *      2. Cancelar
  *
@@ -69,9 +88,11 @@ class WhatsAppNotificationService
             ? $event->task->acceptedProfessionalParticipants()->with('user')->first()
             : null;
 
+        // PMV: la especialidad va hardcodeada a pedido de la psicóloga.
+        // En el futuro saldrá del perfil del profesional.
         $professionalName = $professional && $professional->user && $professional->user->full_name
-            ? $professional->user->full_name
-            : 'el profesional';
+            ? "la psicóloga {$professional->user->full_name}"
+            : 'la psicóloga';
 
         $eventDate = $event->scheduled_at->format('d/m/Y');
         $eventHour = $event->scheduled_at->format('H:i');
@@ -196,9 +217,10 @@ class WhatsAppNotificationService
     }
 
     /**
-     * Payload con Message Template aprobado ("task_event_reminder").
+     * Payload con Message Template aprobado ("task_event_reminder_policy").
      * El template usa variables con nombre: {{patient_name}},
-     * {{professional_name}}, {{event_date}} y {{event_hour}}.
+     * {{professional_name}}, {{event_date}}, {{event_hour}},
+     * {{cancellation_notice}} y {{cancellation_fee}}.
      * Los botones quick reply llevan un payload ("confirm:{token}" /
      * "cancel:{token}") que Meta devuelve al webhook cuando el paciente
      * toca el botón.
@@ -212,7 +234,7 @@ class WhatsAppNotificationService
             'to'                => $phone,
             'type'              => 'template',
             'template'          => [
-                'name'     => 'task_event_reminder',
+                'name'     => 'task_event_reminder_policy',
                 'language' => ['code' => $this->templateLanguage],
                 'components' => [
                     [
@@ -222,6 +244,10 @@ class WhatsAppNotificationService
                             ['type' => 'text', 'parameter_name' => 'professional_name', 'text' => $professionalName],
                             ['type' => 'text', 'parameter_name' => 'event_date', 'text' => $eventDate],
                             ['type' => 'text', 'parameter_name' => 'event_hour', 'text' => $eventHour],
+                            // PMV: política de cancelación hardcodeada; en el
+                            // futuro será configurable por profesional.
+                            ['type' => 'text', 'parameter_name' => 'cancellation_notice', 'text' => '24 horas'],
+                            ['type' => 'text', 'parameter_name' => 'cancellation_fee', 'text' => 'la sesión completa'],
                         ],
                     ],
                     // Botón 0: "Confirmar"
