@@ -15,16 +15,22 @@ class CategorySeeder extends Seeder
             'Diseño' => ['UI/UX', 'Diseño gráfico', 'Animación 3D'],
             'Marketing' => ['SEO', 'Publicidad digital', 'Community management'],
             'Educación' => ['Docencia', 'Formación online', 'Idiomas'],
+            'Salud' => [
+                ['name' => 'Psicología', 'title_male' => 'psicólogo', 'title_female' => 'psicóloga'],
+                ['name' => 'Nutrición', 'title_male' => 'nutricionista', 'title_female' => 'nutricionista'],
+            ],
         ];
 
         foreach ($categories as $categoryName => $subcategories) {
-            $category = ModelsCategory::create(['name' => $categoryName]);
+            $category = ModelsCategory::updateOrCreate(['name' => $categoryName]);
 
-            foreach ($subcategories as $subName) {
-                ModelsSubcategory::create([
-                    'name' => $subName,
-                    'category_id' => $category->id,
-                ]);
+            foreach ($subcategories as $subcategory) {
+                $data = is_array($subcategory) ? $subcategory : ['name' => $subcategory];
+
+                ModelsSubcategory::updateOrCreate(
+                    ['name' => $data['name'], 'category_id' => $category->id],
+                    $data
+                );
             }
         }
     }

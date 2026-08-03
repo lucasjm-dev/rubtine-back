@@ -3,6 +3,7 @@
 namespace App\Domains\Users\Models;
 
 use App\Domains\Categories\Models\Subcategory;
+use App\Domains\Users\Enums\Gender;
 use App\Domains\Tasks\Enums\TaskParticipantProfile;
 use App\Domains\Tasks\Enums\TaskParticipantStatus;
 use App\Domains\Tasks\Enums\TaskParticipantTaskRole;
@@ -19,6 +20,7 @@ class ProfessionalUser extends Model
 
     protected $fillable = [
         'user_id',
+        'gender',
         'birth_date',
         'about_me',
         'profile_photo',
@@ -39,6 +41,23 @@ class ProfessionalUser extends Model
     public function subcategory()
     {
         return $this->belongsTo(Subcategory::class);
+    }
+
+    public function genderedTitle(): ?string
+    {
+        if (!$this->gender || !$this->subcategory) {
+            return null;
+        }
+
+        $title = $this->subcategory->titleFor($this->gender);
+
+        if (!$title) {
+            return null;
+        }
+
+        $article = $this->gender === Gender::FEMALE ? 'la' : 'el';
+
+        return "{$article} {$title}";
     }
 
     public function companies()

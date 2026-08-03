@@ -85,14 +85,10 @@ class WhatsAppNotificationService
         $event->loadMissing('task');
 
         $professional = $event->task
-            ? $event->task->acceptedProfessionalParticipants()->with('user')->first()
+            ? $event->task->acceptedProfessionalParticipants()->with('user.professionalUser')->first()
             : null;
 
-        // PMV: la especialidad va hardcodeada a pedido de la psicóloga.
-        // En el futuro saldrá del perfil del profesional.
-        $professionalName = $professional && $professional->user && $professional->user->full_name
-            ? "la psicóloga {$professional->user->full_name}"
-            : 'la psicóloga';
+        $professionalName = $this->resolveProfessionalName($professional);
 
         $eventDate = $event->scheduled_at->format('d/m/Y');
         $eventHour = $event->scheduled_at->format('H:i');
@@ -147,6 +143,21 @@ class WhatsAppNotificationService
 
             return false;
         }
+    }
+
+    private function resolveProfessionalName($participant): string
+    {
+        $user = $participant ? $participant->user : null;
+        $profile = $user ? $user->professionalUser : null;
+
+        $title = $profile ? $profile->genderedTitle() : null;
+        $fullName = $user ? $user->full_name : null;
+
+        if ($fullName) {
+            return $title ? "{$title} {$fullName}" : $fullName;
+        }
+
+        return $title ?: 'el profesional';
     }
 
     /**
