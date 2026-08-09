@@ -6,6 +6,8 @@ use App\Domains\Tasks\Enums\ScheduleRecurrenceType;
 use App\Domains\Tasks\Enums\TaskEventStatus;
 use App\Domains\Tasks\Models\Task;
 use App\Domains\Tasks\Models\TaskEventSchedule;
+use App\Domains\Tasks\Support\CancellationPolicy;
+use App\Domains\Users\Models\ProfessionalUser;
 use App\Domains\Users\Models\User;
 use App\Helpers\ApiResponse;
 use App\Support\Query\QueryPaginator;
@@ -102,6 +104,8 @@ class TaskEventScheduleService
 
             $schedule = $task->eventSchedules()->create($data);
 
+            $this->updateProfessionalDefaults($user, $data);
+
             $this->generateEvents(
                 $schedule,
                 $startsAt,
@@ -119,13 +123,15 @@ class TaskEventScheduleService
 
         Task::query()->ownedByUser($user)->findOrFail($task->id);
 
-        return DB::transaction(function () use ($schedule, $data) {
+        return DB::transaction(function () use ($user, $schedule, $data) {
             $oldValues = $this->snapshotRelevantFields($schedule);
             $oldDescription = $schedule->description;
             $oldReminderMinutes = $schedule->reminder_minutes_before;
 
-            $schedule->update($data);
+            $schedule->update(CancellationPolicy::normalizeInput($data));
             $schedule->refresh();
+
+            $this->updateProfessionalDefaults($user, $data);
 
             $changedFields = $this->detectChangedFields($oldValues, $schedule);
 
@@ -319,6 +325,29 @@ class TaskEventScheduleService
             ->where('is_manually_edited', false)
             ->where('reminder_minutes_before', $oldReminderMinutes)
             ->update(['reminder_minutes_before' => $schedule->reminder_minutes_before]);
+    }
+
+    private function updateProfessionalDefaults(User $user, array $data): void
+    {
+        $fields = array_filter(
+            array_intersect_key($data, array_flip(CancellationPolicy::FIELDS)),
+            static function ($value) {
+                return $value !== null;
+            }
+        );
+
+        if (empty($fields)) {
+            return;
+        }
+
+        /** @var ProfessionalUser $professional */
+        $professional = $user->professionalUser;
+
+        if ($professional === null) {
+            return;
+        }
+
+        $professional->getOrCreateSettings()->update(CancellationPolicy::normalizeInput($fields));
     }
 
     /**

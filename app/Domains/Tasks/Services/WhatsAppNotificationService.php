@@ -6,6 +6,7 @@ use App\Domains\Tasks\Enums\EventNotificationStatus;
 use App\Domains\Tasks\Enums\EventNotificationType;
 use App\Domains\Tasks\Enums\TaskEventStatus;
 use App\Domains\Tasks\Models\TaskEvent;
+use App\Domains\Tasks\Support\CancellationPolicy;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -98,7 +99,15 @@ class WhatsAppNotificationService
         // otro ambiente usa el template real del recordatorio.
         $payload = app()->environment('local')
             ? $this->buildTestTemplatePayload($phone)
-            : $this->buildTemplatePayload($event, $phone, $patientName, $professionalName, $eventDate, $eventHour);
+            : $this->buildTemplatePayload(
+                $event,
+                $phone,
+                $patientName,
+                $professionalName,
+                $eventDate,
+                $eventHour,
+                $this->resolveCancellationPolicy($event, $professional)
+            );
 
         $url = "{$this->apiUrl}/{$this->phoneNumberId}/messages";
 
@@ -143,6 +152,22 @@ class WhatsAppNotificationService
 
             return false;
         }
+    }
+
+
+    private function resolveCancellationPolicy(TaskEvent $event, $participant): CancellationPolicy
+    {
+        $event->loadMissing('schedule');
+
+        $user = $participant ? $participant->user : null;
+        $professionalUser = $user ? $user->professionalUser : null;
+        $settings = $professionalUser ? $professionalUser->settings : null;
+
+        return CancellationPolicy::resolve(
+            $event->only(CancellationPolicy::FIELDS),
+            $event->schedule ? $event->schedule->only(CancellationPolicy::FIELDS) : [],
+            $settings ? $settings->only(CancellationPolicy::FIELDS) : []
+        );
     }
 
     private function resolveProfessionalName($participant): string
@@ -236,7 +261,7 @@ class WhatsAppNotificationService
      * "cancel:{token}") que Meta devuelve al webhook cuando el paciente
      * toca el botón.
      */
-    private function buildTemplatePayload(TaskEvent $event, string $phone, string $patientName, string $professionalName, string $eventDate, string $eventHour): array
+    private function buildTemplatePayload(TaskEvent $event, string $phone, string $patientName, string $professionalName, string $eventDate, string $eventHour, CancellationPolicy $policy): array
     {
         $token = $event->action_token;
 
@@ -255,10 +280,8 @@ class WhatsAppNotificationService
                             ['type' => 'text', 'parameter_name' => 'professional_name', 'text' => $professionalName],
                             ['type' => 'text', 'parameter_name' => 'event_date', 'text' => $eventDate],
                             ['type' => 'text', 'parameter_name' => 'event_hour', 'text' => $eventHour],
-                            // PMV: política de cancelación hardcodeada; en el
-                            // futuro será configurable por profesional.
-                            ['type' => 'text', 'parameter_name' => 'cancellation_notice', 'text' => '24 horas'],
-                            ['type' => 'text', 'parameter_name' => 'cancellation_fee', 'text' => 'la sesión completa'],
+                            ['type' => 'text', 'parameter_name' => 'cancellation_notice', 'text' => $policy->noticeText()],
+                            ['type' => 'text', 'parameter_name' => 'cancellation_fee', 'text' => $policy->feeText()],
                         ],
                     ],
                     // Botón 0: "Confirmar"

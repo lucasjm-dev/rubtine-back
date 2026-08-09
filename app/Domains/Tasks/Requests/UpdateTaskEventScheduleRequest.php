@@ -3,10 +3,13 @@
 namespace App\Domains\Tasks\Requests;
 
 use App\Domains\Tasks\Enums\ScheduleRecurrenceType;
+use App\Domains\Tasks\Requests\Concerns\ValidatesCancellationPolicy;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateTaskEventScheduleRequest extends FormRequest
 {
+    use ValidatesCancellationPolicy;
+
     public function authorize(): bool
     {
         return true;
@@ -28,6 +31,8 @@ class UpdateTaskEventScheduleRequest extends FormRequest
             'active' => ['sometimes', 'boolean'],
             'reminder_minutes_before' => ['nullable', 'integer', 'min:0'],
         ];
+
+        $rules = array_merge($rules, $this->cancellationPolicyRules());
 
         if ($recurrenceType === ScheduleRecurrenceType::ONCE) {
             $rules['days_of_week'] = ['nullable', 'prohibited'];

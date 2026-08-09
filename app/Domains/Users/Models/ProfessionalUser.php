@@ -8,6 +8,7 @@ use App\Domains\Tasks\Enums\TaskParticipantProfile;
 use App\Domains\Tasks\Enums\TaskParticipantStatus;
 use App\Domains\Tasks\Enums\TaskParticipantTaskRole;
 use App\Domains\Tasks\Models\Task;
+use App\Domains\Tasks\Support\CancellationPolicy;
 use App\Traits\SerializesDatesInAppTimezone;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -36,6 +37,16 @@ class ProfessionalUser extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function settings()
+    {
+        return $this->hasOne(ProfessionalUserSetting::class);
+    }
+
+    public function getOrCreateSettings(): ProfessionalUserSetting
+    {
+        return $this->settings()->firstOrCreate([], CancellationPolicy::default()->toArray());
     }
 
     public function subcategory()

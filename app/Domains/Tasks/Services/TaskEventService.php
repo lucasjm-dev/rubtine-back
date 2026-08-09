@@ -4,6 +4,7 @@ namespace App\Domains\Tasks\Services;
 
 use App\Domains\Tasks\Models\Task;
 use App\Domains\Tasks\Models\TaskEvent;
+use App\Domains\Tasks\Support\CancellationPolicy;
 use App\Domains\Users\Models\User;
 use App\Helpers\ApiResponse;
 use App\Support\Query\QueryPaginator;
@@ -84,7 +85,7 @@ class TaskEventService
 
         Task::query()->ownedByUser($user)->findOrFail($task->id);
 
-        $event->update($data);
+        $event->update(CancellationPolicy::normalizeInput($data));
 
         return ApiResponse::success($event->fresh('notifications'));
     }

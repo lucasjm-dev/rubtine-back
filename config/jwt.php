@@ -170,8 +170,7 @@ return [
     */
 
     'persistent_claims' => [
-        // 'foo',
-        // 'bar',
+        'login_as',
     ],
 
     /*

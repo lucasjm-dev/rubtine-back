@@ -28,6 +28,9 @@ class TaskEventSchedule extends Model
         'horizon_generated_until',
         'active',
         'reminder_minutes_before',
+        'cancellation_notice_hours',
+        'cancellation_fee_type',
+        'cancellation_fee_value',
     ];
 
     protected $casts = [
@@ -36,6 +39,8 @@ class TaskEventSchedule extends Model
         'ends_at' => 'date',
         'horizon_generated_until' => 'date',
         'active' => 'boolean',
+        'cancellation_notice_hours' => 'integer',
+        'cancellation_fee_value' => 'float',
     ];
 
     public function task(): BelongsTo

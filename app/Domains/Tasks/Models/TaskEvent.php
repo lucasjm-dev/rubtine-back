@@ -27,6 +27,9 @@ class TaskEvent extends Model
         'ends_at',
         'is_manually_edited',
         'reminder_minutes_before',
+        'cancellation_notice_hours',
+        'cancellation_fee_type',
+        'cancellation_fee_value',
         'action_token',
     ];
 
@@ -38,6 +41,8 @@ class TaskEvent extends Model
         'scheduled_at' => 'datetime',
         'ends_at' => 'datetime',
         'is_manually_edited' => 'boolean',
+        'cancellation_notice_hours' => 'integer',
+        'cancellation_fee_value' => 'float',
     ];
 
     protected static function boot()
